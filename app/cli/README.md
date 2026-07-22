@@ -9,8 +9,10 @@ say with what your coding agents actually did, using the session transcripts
 already sitting on your machine.
 
 ```bash
-npx rulekeeper-cli demo    # zero-risk sample report, synthetic logs
-npx rulekeeper-cli scan    # audit your own repos
+npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz
+
+rulekeeper demo    # zero-risk sample report, synthetic logs
+rulekeeper scan    # audit your own repos
 ```
 
 ## What it found on the author's machine

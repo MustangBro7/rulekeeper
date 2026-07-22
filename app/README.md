@@ -10,9 +10,11 @@ Context health for coding agents. Two workspaces:
   Live: <https://rulekeeper.abhinavmohan12.workers.dev>
 
 ```sh
-npx rulekeeper-cli demo
-npx rulekeeper-cli scan --since 28d
-npx rulekeeper-cli share
+npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz
+
+rulekeeper demo
+rulekeeper scan --since 28d
+rulekeeper share
 ```
 
 The validation that led to this product is in

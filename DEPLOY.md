@@ -21,18 +21,46 @@ Verified against production, not just locally:
 - GitHub links now point at `github.com/MustangBro7/rulekeeper`.
 - Repo initialized and committed (`e2f5d04`); no remote yet.
 
+### Distribution: GitHub Release, NOT npm (decided 2026-07-22)
+
+We deliberately do **not** publish to the npm registry — that would mean a
+long-lived publish token living on the dev machine, which is the exact thing
+npm's token-stealing worms target. The CLI has zero runtime dependencies, so
+there is no inbound dependency risk either way; this only removes the
+account-takeover path.
+
+Install command (baked into the landing page and both READMEs):
+
+```bash
+npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz
+```
+
+`releases/latest/download/` always resolves to the newest release, so the
+published command never changes.
+
 ### Remaining before public launch
-1. **`npm publish`** — needs `npm login` on this machine (not authed).
+1. **Create the GitHub repo and push** — the site's github links and the
+   install command both 404 until this exists.
    ```bash
-   cd app/cli && npm publish --access public   # name: rulekeeper-cli
-   ```
-2. **Create the GitHub repo** `MustangBro7/rulekeeper` and push — the links
-   on the live site 404 until it exists.
-   ```bash
+   cd "/Volumes/X10 Pro/projects/empty_dir/rulekeeper"
    gh repo create MustangBro7/rulekeeper --public --source . --push
    ```
+2. **Cut release v1.0.0 with the tarball attached under the exact filename
+   `rulekeeper-cli.tgz`** (the install URL depends on that name):
+   ```bash
+   cd app/cli && npm pack --pack-destination /tmp
+   cp /tmp/rulekeeper-cli-1.0.0.tgz /tmp/rulekeeper-cli.tgz
+   gh release create v1.0.0 /tmp/rulekeeper-cli.tgz \
+     --title "RuleKeeper v1.0.0" \
+     --notes "Free local CLI: scan / demo / share. Zero runtime deps, Node >= 18."
+   ```
+   Then verify from a clean shell:
+   `npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz && rulekeeper demo`
 3. Optional: custom domain (`rulekeeper.dev` is in the canonical/OG tags but
    the site serves from workers.dev — either buy it or update those tags).
+
+For each future version: bump `cli/package.json`, re-pack, and attach the
+tarball to a new release under the same `rulekeeper-cli.tgz` filename.
 
 ---
 

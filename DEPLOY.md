@@ -13,17 +13,26 @@ Verified against production, not just locally:
 - redaction spot-check on the live page: zero absolute paths, zero emails
 - unknown routes → 404
 
-### Open items before public launch
-1. `npm publish` — **the name `rulekeeper` is TAKEN on npm** (v0.1.6 exists).
-   Rename in `cli/package.json` (suggest `@mustangbro7/rulekeeper` or
-   `rulekeeper-cli`) and update the install command in
-   `app/worker/public/index.html` (hero `<code>`, `data-copy-command`,
-   pricing CTA) + `app/README.md`, then redeploy the worker.
-2. `/og.png` is referenced by the meta tags but returns 404 — add the image
-   to `app/worker/public/` (1200×630) or drop the tags.
-3. GitHub links are placeholders (`https://github.com/`) — point them at the
-   real repo once it exists.
-4. CLI is not in git yet — `git init` + commit `app/`, `mine.py`, the proof.
+### Launch polish — DONE 2026-07-22 (version b203b43e)
+- Package renamed to **`rulekeeper-cli`** (`rulekeeper` was taken on npm);
+  installed binary is still `rulekeeper`. Install command updated in all
+  three landing spots + both READMEs; verified live.
+- `/og.png` created (1200×630, matches the v1 terminal aesthetic) — 200.
+- GitHub links now point at `github.com/MustangBro7/rulekeeper`.
+- Repo initialized and committed (`e2f5d04`); no remote yet.
+
+### Remaining before public launch
+1. **`npm publish`** — needs `npm login` on this machine (not authed).
+   ```bash
+   cd app/cli && npm publish --access public   # name: rulekeeper-cli
+   ```
+2. **Create the GitHub repo** `MustangBro7/rulekeeper` and push — the links
+   on the live site 404 until it exists.
+   ```bash
+   gh repo create MustangBro7/rulekeeper --public --source . --push
+   ```
+3. Optional: custom domain (`rulekeeper.dev` is in the canonical/OG tags but
+   the site serves from workers.dev — either buy it or update those tags).
 
 ---
 

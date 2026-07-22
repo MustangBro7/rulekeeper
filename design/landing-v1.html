@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RuleKeeper — v1 “Evidence Terminal”</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0f0e;
+    --panel: #101615;
+    --panel-2: #0e1312;
+    --ink: #e8f0ee;
+    --ink-2: #9fb0ac;
+    --muted: #5f6f6b;
+    --line: #1d2624;
+    --accent: #34d399;      /* phosphor green */
+    --accent-dim: #10643f;
+    --good: #34d399;
+    --crit: #f87171;
+    --warn: #fbbf24;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 15px; line-height: 1.6;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav */
+  nav { border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(11,15,14,.92); backdrop-filter: blur(6px); z-index: 10; }
+  .nav-in { display: flex; align-items: center; gap: 28px; height: 60px; }
+  .logo { font-weight: 800; letter-spacing: .04em; }
+  .logo b { color: var(--accent); }
+  .nav-links { display: flex; gap: 22px; margin-left: auto; font-size: 13px; color: var(--ink-2); }
+  .nav-links a:hover { color: var(--ink); }
+  .btn {
+    display: inline-block; padding: 10px 18px; font: inherit; font-size: 13px; font-weight: 700;
+    background: var(--accent); color: #04150d; border: none; cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.1); }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent-dim); }
+
+  /* hero */
+  .hero { padding: 88px 0 72px; display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; }
+  .kicker { color: var(--accent); font-size: 12px; letter-spacing: .22em; text-transform: uppercase; margin-bottom: 20px; }
+  .kicker::before { content: "▸ "; }
+  h1 { font-size: 40px; line-height: 1.15; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 20px; }
+  h1 .dim { color: var(--muted); }
+  .sub { color: var(--ink-2); font-size: 15px; max-width: 46ch; margin-bottom: 32px; }
+  .install {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    background: var(--panel); border: 1px solid var(--line); padding: 13px 16px; max-width: 430px;
+  }
+  .install code { color: var(--accent); font-size: 14px; }
+  .install .copy { margin-left: auto; color: var(--muted); font-size: 12px; cursor: pointer; }
+  .hero-note { color: var(--muted); font-size: 12px; }
+
+  /* terminal */
+  .term { background: var(--panel); border: 1px solid var(--line); box-shadow: 0 0 60px rgba(52,211,153,.06); }
+  .term-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+  .term-title { margin-left: 8px; color: var(--muted); font-size: 12px; }
+  .term-body { padding: 18px 18px 22px; font-size: 12.5px; line-height: 1.75; }
+  .p  { color: var(--muted); }
+  .g  { color: var(--good); }
+  .r  { color: var(--crit); }
+  .y  { color: var(--warn); }
+  .w  { color: var(--ink); }
+  .term-body .rule-line { display: block; }
+  .cursor { display: inline-block; width: 8px; height: 15px; background: var(--accent); animation: blink 1.1s step-end infinite; vertical-align: text-bottom; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* stat strip */
+  .stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--panel-2); }
+  .stats-in { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .stat { padding: 26px 24px; border-left: 1px solid var(--line); }
+  .stat:first-child { border-left: none; }
+  .stat .v { font-size: 30px; font-weight: 800; color: var(--ink); }
+  .stat .v em { font-style: normal; color: var(--accent); }
+  .stat .k { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  /* features */
+  section.features { padding: 84px 0; }
+  .sec-kicker { color: var(--accent); font-size: 12px; letter-spacing: .22em; text-transform: uppercase; margin-bottom: 14px; }
+  h2 { font-size: 26px; font-weight: 800; margin-bottom: 44px; max-width: 30ch; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .card { background: var(--panel); border: 1px solid var(--line); padding: 26px 24px; }
+  .card h3 { font-size: 15px; font-weight: 700; margin: 14px 0 10px; }
+  .card p { color: var(--ink-2); font-size: 13px; }
+  .tag { display: inline-block; font-size: 11px; padding: 3px 9px; border: 1px solid var(--accent-dim); color: var(--accent); letter-spacing: .1em; }
+
+  /* receipt */
+  .receipt-sec { padding: 0 0 84px; }
+  .receipt { border: 1px solid var(--line); background: var(--panel); padding: 26px 28px; display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; }
+  .receipt .q { font-size: 16px; line-height: 1.6; }
+  .receipt .q .r { font-weight: 700; }
+  .receipt .meta { color: var(--muted); font-size: 12px; margin-top: 12px; }
+  .receipt .stamp { border: 2px solid var(--crit); color: var(--crit); padding: 10px 16px; font-weight: 800; font-size: 13px; letter-spacing: .1em; transform: rotate(3deg); white-space: nowrap; }
+
+  /* pricing */
+  .pricing { border-top: 1px solid var(--line); padding: 72px 0 84px; }
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
+  .tier { border: 1px solid var(--line); background: var(--panel); padding: 28px 26px; }
+  .tier.hot { border-color: var(--accent-dim); box-shadow: 0 0 40px rgba(52,211,153,.07); }
+  .tier .name { font-size: 13px; color: var(--ink-2); letter-spacing: .12em; text-transform: uppercase; }
+  .tier .price { font-size: 34px; font-weight: 800; margin: 12px 0 4px; }
+  .tier .per { color: var(--muted); font-size: 12px; margin-bottom: 18px; }
+  .tier ul { list-style: none; font-size: 13px; color: var(--ink-2); margin-bottom: 24px; }
+  .tier li { padding: 5px 0; }
+  .tier li::before { content: "▸ "; color: var(--accent); }
+
+  footer { border-top: 1px solid var(--line); padding: 30px 0; color: var(--muted); font-size: 12px; display: flex; }
+  footer .wrap { display: flex; gap: 24px; width: 100%; }
+  footer .right { margin-left: auto; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; padding: 56px 0 48px; }
+    .stats-in { grid-template-columns: repeat(2, 1fr); }
+    .stat:nth-child(3) { border-left: none; border-top: 1px solid var(--line); }
+    .stat:nth-child(4) { border-top: 1px solid var(--line); }
+    .grid3, .tiers { grid-template-columns: 1fr; }
+    .receipt { grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <a class="logo" href="#"><b>▚</b> rulekeeper</a>
+    <div class="nav-links">
+      <a href="#how">how it works</a>
+      <a href="#proof">proof</a>
+      <a href="#pricing">pricing</a>
+      <a href="#">github ↗</a>
+    </div>
+    <a class="btn" href="#">npx rulekeeper</a>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <div>
+    <div class="kicker">context health for coding agents</div>
+    <h1>Your agents never read your rules.<br><span class="dim">Now you can prove it.</span></h1>
+    <p class="sub">RuleKeeper joins your CLAUDE.md / AGENTS.md with what Claude Code, Codex
+      and Cursor actually did in your session transcripts — and scores every rule
+      with receipts. Local-first. Your code never leaves the machine.</p>
+    <div class="install">
+      <code>$ npx rulekeeper scan</code>
+      <span class="copy">[copy]</span>
+    </div>
+    <div class="hero-note">free CLI · zero config · reads the logs already on your disk</div>
+  </div>
+
+  <div class="term" role="img" aria-label="Terminal output of rulekeeper scan showing rule adherence findings">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="term-title">rulekeeper scan — 4-week backtest</span>
+    </div>
+    <div class="term-body">
+      <span class="rule-line p">$ rulekeeper scan --since 4w</span>
+      <span class="rule-line w">▚ 59 sessions · 3,095 commands · 1,367 edits · 5 repos</span>
+      <span class="rule-line p">──────────────────────────────────────────────</span>
+      <span class="rule-line"><span class="r">✗ DELIVERY</span><span class="w">  AGENTS.md reached the agent in </span><span class="r">40%</span><span class="w"> of sessions</span></span>
+      <span class="rule-line"><span class="g">✓ WORKS</span><span class="w">    “verify in preview before done” — </span><span class="g">12/12</span><span class="w"> when in context</span></span>
+      <span class="rule-line"><span class="y">△ DEAD</span><span class="w">     “run standard checks” — followed 9/9 </span><span class="y">before the rule existed</span></span>
+      <span class="rule-line"><span class="r">✗ VIOLATION</span><span class="w"> wrangler.jsonc edited 10× · cf-typegen never ran</span></span>
+      <span class="rule-line p">           └ receipt: session 5e277bbf · jul 11 · 102 edits</span>
+      <span class="rule-line p">──────────────────────────────────────────────</span>
+      <span class="rule-line w">8 of 23 rules never exercised in 4 weeks. <span class="cursor"></span></span>
+    </div>
+  </div>
+</header>
+
+<div class="stats" id="proof">
+  <div class="wrap stats-in">
+    <div class="stat"><div class="v"><em>60%</em></div><div class="k">of sessions never saw the rules at all</div></div>
+    <div class="stat"><div class="v">78→<em>93%</em></div><div class="k">adherence after one measured rule was added</div></div>
+    <div class="stat"><div class="v"><em>12/12</em></div><div class="k">rule followed when actually delivered</div></div>
+    <div class="stat"><div class="v"><em>8/23</em></div><div class="k">rules never exercised — dead weight</div></div>
+  </div>
+</div>
+
+<section class="features wrap" id="how">
+  <div class="sec-kicker">three questions, answered from your own logs</div>
+  <h2>Static linters check your files. RuleKeeper checks your agents.</h2>
+  <div class="grid3">
+    <div class="card">
+      <span class="tag">01 · DELIVERY</span>
+      <h3>Did the rule even reach the agent?</h3>
+      <p>Most instruction files silently never make it into context — wrong directory,
+         wrong filename, wrong tool. RuleKeeper detects per-session whether your
+         rules were actually delivered.</p>
+    </div>
+    <div class="card">
+      <span class="tag">02 · EFFECTIVENESS</span>
+      <h3>Did the rule change behavior?</h3>
+      <p>Every rule gets a before/after and an in-context vs not split, dated by the
+         git commit that introduced it. Keep what works. Delete what agents already
+         do by default.</p>
+    </div>
+    <div class="card">
+      <span class="tag">03 · RECEIPTS</span>
+      <h3>Which sessions broke it?</h3>
+      <p>Every violation links to the exact session, timestamp and edit. No vibes —
+         transcript evidence you can open and read.</p>
+    </div>
+  </div>
+</section>
+
+<section class="receipt-sec wrap">
+  <div class="receipt">
+    <div>
+      <div class="q w">“<span class="r">wrangler.jsonc</span> was edited <b>10 times</b> across two repos.
+        <span class="r">cf-typegen</span> — required by the CLAUDE.md that was in context — <b>never ran</b>.”</div>
+      <div class="meta">receipt · session 5e277bbf · 2026-07-11 · 102 edits · hand-verifiable in your own transcript</div>
+    </div>
+    <div class="stamp">RULE BROKEN</div>
+  </div>
+</section>
+
+<section class="pricing wrap" id="pricing">
+  <div class="sec-kicker">pricing</div>
+  <h2>Free where it counts. Paid where it compounds.</h2>
+  <div class="tiers">
+    <div class="tier">
+      <div class="name">CLI</div>
+      <div class="price">$0</div>
+      <div class="per">forever · local-only</div>
+      <ul><li>full scan + report</li><li>every rule scored</li><li>receipts included</li></ul>
+      <a class="btn ghost" href="#">npx rulekeeper</a>
+    </div>
+    <div class="tier hot">
+      <div class="name">Indie</div>
+      <div class="price">$5</div>
+      <div class="per">/month</div>
+      <ul><li>fleet drift across repos</li><li>weekly trend history</li><li>hygiene PRs</li></ul>
+      <a class="btn" href="#">start free</a>
+    </div>
+    <div class="tier">
+      <div class="name">Team</div>
+      <div class="price">$29</div>
+      <div class="per">/month · 10–100 repos</div>
+      <ul><li>template conformance</li><li>org findings history</li><li>GitHub App + CI</li></ul>
+      <a class="btn ghost" href="#">talk to us</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>▚ rulekeeper</span>
+    <span class="right">local-first · MIT CLI · © 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>

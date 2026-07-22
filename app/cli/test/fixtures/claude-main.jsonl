@@ -1,0 +1,4 @@
+{"type":"user","timestamp":"2026-07-01T10:00:00Z","cwd":"/tmp/example","message":{"content":"hello"}}
+{"type":"assistant","timestamp":"2026-07-01T10:01:00Z","cwd":"/tmp/example","message":{"content":[{"type":"tool_use","id":"b1","name":"Bash","input":{"command":"npm test"}},{"type":"tool_use","id":"e1","name":"Edit","input":{"file_path":"/tmp/example/src/a.ts","new_string":"const a = 1"}},{"type":"tool_use","id":"r1","name":"Read","input":{"file_path":"/tmp/example/CLAUDE.md"}}]}}
+{"type":"user","timestamp":"2026-07-01T10:02:00Z","message":{"content":[{"type":"tool_result","tool_use_id":"b1","is_error":true,"content":"failed"}]}}
+not json

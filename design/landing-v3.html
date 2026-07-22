@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RuleKeeper — v3 “Mist &amp; Teal SaaS”</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f6f8f8;
+    --card: #ffffff;
+    --ink: #17272a;
+    --body: #45585c;
+    --muted: #7d8f92;
+    --border: rgba(23,39,42,.10);
+    --teal: #0f7f8b;
+    --teal-soft: #e3f1f2;
+    --good: #23663a;
+    --good-soft: #e5f2e9;
+    --crit: #b3372c;
+    --crit-soft: #f9e9e7;
+    --warn-soft: #f4ecdd;
+    --warn-ink: #7a5a12;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: Inter, system-ui, sans-serif; font-size: 16px; line-height: 1.65; }
+  a { color: inherit; text-decoration: none; }
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  nav { position: sticky; top: 0; z-index: 20; background: rgba(246,248,248,.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  .nav-in { display: flex; align-items: center; height: 68px; gap: 30px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; letter-spacing: -.01em; }
+  .logo .mark { width: 30px; height: 30px; border-radius: 10px; background: var(--teal); color: #fff; display: grid; place-items: center; font-size: 15px; }
+  .nav-links { display: flex; gap: 26px; margin-left: auto; font-size: 14px; font-weight: 500; color: var(--body); }
+  .nav-links a:hover { color: var(--teal); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--teal); color: #fff; font-weight: 600; font-size: 14.5px; padding: 12px 22px; border-radius: 999px; border: none; cursor: pointer; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+  .btn.ghost:hover { border-color: var(--teal); color: var(--teal); }
+
+  .hero { padding: 88px 0 40px; text-align: center; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--teal-soft); color: var(--teal); font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 999px; margin-bottom: 26px; }
+  h1 { font-size: clamp(38px, 5.6vw, 60px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.06; max-width: 20ch; margin: 0 auto 22px; }
+  h1 em { font-style: normal; color: var(--teal); }
+  .sub { color: var(--body); font-size: 18px; max-width: 58ch; margin: 0 auto 34px; }
+  .cta-row { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .cmd { font-family: "Geist Mono", monospace; font-size: 13.5px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 12px 20px; color: var(--body); }
+  .cmd b { color: var(--teal); font-weight: 500; }
+  .trust { color: var(--muted); font-size: 13px; }
+
+  /* dashboard shot */
+  .shot-outer { padding: 46px 0 0; }
+  .shot { max-width: 980px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); border-radius: 1.75rem; box-shadow: 0 30px 80px -30px rgba(23,39,42,.25); overflow: hidden; }
+  .shot-head { display: flex; align-items: center; gap: 14px; padding: 18px 26px; border-bottom: 1px solid var(--border); }
+  .shot-head .t { font-weight: 700; font-size: 15px; }
+  .shot-head .mono { margin-left: auto; color: var(--muted); font-size: 12px; }
+  .shot-body { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 24px 26px 10px; }
+  .tile { border: 1px solid var(--border); border-radius: 1.25rem; padding: 18px 20px; text-align: left; }
+  .tile .k { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+  .tile .v { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin-top: 4px; }
+  .tile .d { font-size: 12.5px; margin-top: 2px; font-weight: 600; }
+  .d.up { color: var(--good); } .d.down { color: var(--crit); } .d.flat { color: var(--muted); }
+  .rules { padding: 8px 26px 26px; text-align: left; }
+  .rule-row { display: grid; grid-template-columns: 1fr 150px 110px; align-items: center; gap: 16px; padding: 12px 4px; border-top: 1px solid var(--border); font-size: 14px; }
+  .rule-row:first-child { border-top: none; }
+  .rule-row .name { font-family: "Geist Mono", monospace; font-size: 12.5px; color: var(--body); }
+  .bar { height: 8px; border-radius: 999px; background: #edf1f1; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 999px; background: var(--teal); }
+  .chip { justify-self: end; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px; }
+  .chip.works { background: var(--good-soft); color: var(--good); }
+  .chip.dead { background: var(--warn-soft); color: var(--warn-ink); }
+  .chip.broken { background: var(--crit-soft); color: var(--crit); }
+  .chip.gap { background: var(--crit-soft); color: var(--crit); }
+
+  /* features */
+  .features { padding: 96px 0 30px; }
+  .sec-head { text-align: center; margin-bottom: 52px; }
+  .sec-head .pill { margin-bottom: 18px; }
+  h2 { font-size: clamp(28px, 3.6vw, 38px); font-weight: 800; letter-spacing: -.025em; max-width: 26ch; margin: 0 auto; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .fcard { background: var(--card); border: 1px solid var(--border); border-radius: 1.75rem; padding: 30px 28px; }
+  .fcard .ic { width: 44px; height: 44px; border-radius: 14px; background: var(--teal-soft); color: var(--teal); display: grid; place-items: center; font-size: 20px; margin-bottom: 18px; }
+  .fcard h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; letter-spacing: -.01em; }
+  .fcard p { color: var(--body); font-size: 14.5px; }
+
+  /* quote band */
+  .quote { padding: 80px 0; }
+  .quote-in { background: var(--teal); color: #fff; border-radius: 2rem; padding: 56px 48px; display: grid; grid-template-columns: auto 1fr; gap: 44px; align-items: center; }
+  .quote .big { font-size: clamp(56px, 8vw, 96px); font-weight: 800; line-height: 1; }
+  .quote p { font-size: 19px; max-width: 44ch; }
+  .quote .src { opacity: .75; font-size: 13px; margin-top: 12px; }
+
+  /* pricing */
+  .pricing { padding: 20px 0 100px; }
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 52px; }
+  .tier { background: var(--card); border: 1px solid var(--border); border-radius: 1.75rem; padding: 32px 30px; display: flex; flex-direction: column; }
+  .tier.hot { border-color: var(--teal); box-shadow: 0 20px 50px -25px rgba(15,127,139,.35); }
+  .tier .name { font-weight: 700; font-size: 15px; }
+  .tier .price { font-size: 40px; font-weight: 800; letter-spacing: -.02em; margin: 14px 0 2px; }
+  .tier .per { color: var(--muted); font-size: 13.5px; margin-bottom: 20px; }
+  .tier ul { list-style: none; font-size: 14.5px; color: var(--body); margin-bottom: 28px; }
+  .tier li { padding: 7px 0 7px 26px; position: relative; }
+  .tier li::before { content: "✓"; position: absolute; left: 0; color: var(--teal); font-weight: 700; }
+  .tier .btn { margin-top: auto; justify-content: center; }
+
+  footer { border-top: 1px solid var(--border); padding: 30px 0; color: var(--muted); font-size: 13.5px; }
+  footer .wrap { display: flex; gap: 24px; }
+  footer .right { margin-left: auto; }
+
+  @media (max-width: 900px) {
+    .shot-body, .grid3, .tiers { grid-template-columns: 1fr; }
+    .quote-in { grid-template-columns: 1fr; gap: 16px; padding: 40px 30px; }
+    .rule-row { grid-template-columns: 1fr 90px; }
+    .rule-row .bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <a class="logo" href="#"><span class="mark">▚</span> RuleKeeper</a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#proof">Proof</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#">Docs</a>
+    </div>
+    <a class="btn" href="#">Get started free</a>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <div class="pill">✦ New — the 4-week backtest report</div>
+  <h1>Do your coding agents <em>actually follow</em> your rules?</h1>
+  <p class="sub">RuleKeeper connects CLAUDE.md and AGENTS.md to your real agent transcripts —
+    showing which rules reached context, which changed behavior, and every violation
+    with receipts. Local-first: your code never leaves your machine.</p>
+  <div class="cta-row">
+    <span class="cmd"><b>$</b> npx rulekeeper scan</span>
+    <a class="btn" href="#proof">See it on real data</a>
+  </div>
+  <div class="trust">Works with Claude Code · Codex · Cursor — reads the session logs already on your disk</div>
+</header>
+
+<div class="shot-outer wrap" id="proof">
+  <div class="shot" role="img" aria-label="RuleKeeper report: stat tiles and per-rule adherence list">
+    <div class="shot-head">
+      <span class="t">Context-health report</span>
+      <span class="mono">59 sessions · 4 weeks · 5 repos</span>
+    </div>
+    <div class="shot-body">
+      <div class="tile">
+        <div class="k">Rules delivered to context</div>
+        <div class="v">40%</div>
+        <div class="d down">▼ your agents never saw the rest</div>
+      </div>
+      <div class="tile">
+        <div class="k">Adherence when delivered</div>
+        <div class="v">12/12</div>
+        <div class="d up">▲ 78% → 93% after rule added</div>
+      </div>
+      <div class="tile">
+        <div class="k">Dead-weight rules</div>
+        <div class="v">8<span style="color:var(--muted);font-size:20px">/23</span></div>
+        <div class="d flat">— never exercised in 4 weeks</div>
+      </div>
+    </div>
+    <div class="rules">
+      <div class="rule-row">
+        <span class="name">verify-ui-in-preview-before-done</span>
+        <span class="bar" aria-label="93% adherence"><i style="width:93%"></i></span>
+        <span class="chip works">✓ Works</span>
+      </div>
+      <div class="rule-row">
+        <span class="name">agents-md-delivery (busiest repo)</span>
+        <span class="bar" aria-label="40% delivered"><i style="width:40%; background:var(--crit)"></i></span>
+        <span class="chip gap">✕ Not delivered</span>
+      </div>
+      <div class="rule-row">
+        <span class="name">run-standard-checks</span>
+        <span class="bar" aria-label="100% before rule existed"><i style="width:100%; background:#c8d6d8"></i></span>
+        <span class="chip dead">△ Dead weight</span>
+      </div>
+      <div class="rule-row">
+        <span class="name">cf-typegen-after-wrangler-edit</span>
+        <span class="bar" aria-label="0% adherence"><i style="width:4%; background:var(--crit)"></i></span>
+        <span class="chip broken">✕ Broken — receipt</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="features wrap" id="how">
+  <div class="sec-head">
+    <div class="pill">How it works</div>
+    <h2>Observability for the one data source everyone ignores</h2>
+  </div>
+  <div class="grid3">
+    <div class="fcard">
+      <div class="ic">⇣</div>
+      <h3>Scan local transcripts</h3>
+      <p>One command reads the Claude Code and Codex session logs already sitting on your
+         machine. No API keys, no upload, no config.</p>
+    </div>
+    <div class="fcard">
+      <div class="ic">⚖</div>
+      <h3>Score every rule</h3>
+      <p>Each rule in your instruction files gets delivery, adherence, and before/after
+         evidence — dated by the git commit that introduced it, so nothing is judged
+         against a rule that didn’t exist yet.</p>
+    </div>
+    <div class="fcard">
+      <div class="ic">⌦</div>
+      <h3>Cut the dead weight</h3>
+      <p>Keep the rules that change behavior. Delete the ones agents follow anyway. Fix
+         the delivery gaps that make the rest invisible.</p>
+    </div>
+  </div>
+</section>
+
+<div class="quote wrap">
+  <div class="quote-in">
+    <div class="big">60%</div>
+    <div>
+      <p>of sessions touching our busiest repo never had the instruction file in context.
+         Every session that saw the rule followed it — 12 out of 12.</p>
+      <div class="src">Founder’s own data · 59 sessions · reproducible with the free CLI</div>
+    </div>
+  </div>
+</div>
+
+<section class="pricing wrap" id="pricing">
+  <div class="sec-head">
+    <div class="pill">Pricing</div>
+    <h2>Free local CLI. Paid where it compounds.</h2>
+  </div>
+  <div class="tiers">
+    <div class="tier">
+      <div class="name">CLI</div>
+      <div class="price">$0</div>
+      <div class="per">local-only · MIT</div>
+      <ul><li>Full scan &amp; report</li><li>Every rule scored</li><li>Receipts included</li></ul>
+      <a class="btn ghost" href="#">npx rulekeeper</a>
+    </div>
+    <div class="tier hot">
+      <div class="name">Indie</div>
+      <div class="price">$5</div>
+      <div class="per">per month</div>
+      <ul><li>Fleet drift across your repos</li><li>Weekly trend history</li><li>Hygiene PRs</li></ul>
+      <a class="btn" href="#">Start free</a>
+    </div>
+    <div class="tier">
+      <div class="name">Team</div>
+      <div class="price">$29</div>
+      <div class="per">per month · 10–100 repos</div>
+      <ul><li>Template conformance</li><li>Org findings history</li><li>GitHub App + CI gate</li></ul>
+      <a class="btn ghost" href="#">Talk to us</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>▚ RuleKeeper</span>
+    <span class="right">Local-first · © 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>

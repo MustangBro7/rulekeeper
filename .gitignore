@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+rulekeeper-report/
+.wrangler/
+worker-configuration.d.ts
+.DS_Store
+*.log
+__pycache__/

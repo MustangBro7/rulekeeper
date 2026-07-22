@@ -1,0 +1,16 @@
+{
+  "rules": [
+    {
+      "id": "verify-safe-module",
+      "description": "Verify changes to the safe module",
+      "appliesTo": { "editsMatching": "safe\\.ts$" },
+      "requireCommand": "npm test"
+    },
+    {
+      "id": "no-eval-in-workers",
+      "description": "Never use eval in worker modules",
+      "forbidContent": "eval\\(",
+      "inEditsMatching": "worker\\.ts$"
+    }
+  ]
+}

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RuleKeeper — v5 “Control Room”</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #07090f;
+    --panel: rgba(255,255,255,.035);
+    --panel-line: rgba(255,255,255,.09);
+    --ink: #eef1f8;
+    --body: #a8b0c2;
+    --muted: #626b80;
+    --cyan: #4cc9f0;
+    --violet: #8b7bf4;
+    --good: #3ddc97;
+    --crit: #ff6b6b;
+    --warn: #ffc94d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: Inter, system-ui, sans-serif; font-size: 15.5px; line-height: 1.65;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 70% -5%, rgba(139,123,244,.16), transparent),
+      radial-gradient(ellipse 50% 35% at 15% 5%, rgba(76,201,240,.10), transparent);
+    background-repeat: no-repeat;
+  }
+  a { color: inherit; text-decoration: none; }
+  h1, h2, h3, .display { font-family: "Space Grotesk", Inter, sans-serif; }
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  nav { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(12px); background: rgba(7,9,15,.7); border-bottom: 1px solid var(--panel-line); }
+  .nav-in { display: flex; align-items: center; height: 66px; gap: 30px; }
+  .logo { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+  .logo .mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--cyan), var(--violet)); display: grid; place-items: center; color: #07090f; font-size: 14px; font-weight: 800; }
+  .nav-links { display: flex; gap: 26px; margin-left: auto; font-size: 14px; color: var(--body); }
+  .nav-links a:hover { color: var(--ink); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; padding: 11px 22px; border-radius: 10px; background: linear-gradient(135deg, var(--cyan), var(--violet)); color: #07090f; border: none; cursor: pointer; }
+  .btn:hover { filter: brightness(1.12); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--panel-line); }
+  .btn.ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .hero { padding: 92px 0 64px; display: grid; grid-template-columns: 1.1fr .9fr; gap: 60px; align-items: center; }
+  .tagline { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--cyan); border: 1px solid rgba(76,201,240,.3); background: rgba(76,201,240,.07); padding: 6px 14px; border-radius: 999px; margin-bottom: 24px; }
+  .tagline::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px var(--good); }
+  h1 { font-size: clamp(38px, 5vw, 56px); font-weight: 700; letter-spacing: -.02em; line-height: 1.06; margin-bottom: 22px; }
+  h1 .grad { background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { color: var(--body); font-size: 16.5px; max-width: 50ch; margin-bottom: 32px; }
+  .cta-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .cmd { font-family: "Geist Mono", monospace; font-size: 13px; color: var(--body); background: var(--panel); border: 1px solid var(--panel-line); border-radius: 10px; padding: 12px 18px; }
+  .cmd b { color: var(--cyan); font-weight: 500; }
+  .agents { margin-top: 26px; color: var(--muted); font-size: 13px; }
+
+  /* gauge panel */
+  .panel { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 20px; padding: 26px; backdrop-filter: blur(8px); }
+  .panel .p-head { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .p-head .live { margin-left: auto; color: var(--good); font-size: 12px; }
+  .gauge-row { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; margin-bottom: 22px; }
+  .gauge { position: relative; width: 150px; height: 150px; }
+  .gauge svg { transform: rotate(-90deg); }
+  .gauge .val { position: absolute; inset: 0; display: grid; place-items: center; }
+  .gauge .val .n { font-family: "Space Grotesk", sans-serif; font-size: 34px; font-weight: 700; line-height: 1; }
+  .gauge .val .k { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .signals { display: flex; flex-direction: column; gap: 12px; }
+  .signal { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+  .signal .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .signal .lbl { color: var(--body); }
+  .signal .v { margin-left: auto; font-family: "Geist Mono", monospace; font-size: 12.5px; }
+  .g .dot { background: var(--good); box-shadow: 0 0 8px rgba(61,220,151,.7); } .g .v { color: var(--good); }
+  .c .dot { background: var(--crit); box-shadow: 0 0 8px rgba(255,107,107,.7); } .c .v { color: var(--crit); }
+  .w .dot { background: var(--warn); box-shadow: 0 0 8px rgba(255,201,77,.6); } .w .v { color: var(--warn); }
+  .panel .foot { border-top: 1px solid var(--panel-line); padding-top: 14px; font-size: 12.5px; color: var(--muted); }
+  .panel .foot b { color: var(--body); font-weight: 500; }
+
+  /* layers */
+  .layers { padding: 72px 0 20px; }
+  .sec-kicker { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--violet); margin-bottom: 14px; }
+  h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; letter-spacing: -.015em; margin-bottom: 46px; max-width: 30ch; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .lcard { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 20px; padding: 28px 26px; position: relative; overflow: hidden; }
+  .lcard::before { content: ""; position: absolute; inset: 0 auto auto 0; width: 100%; height: 2px; background: linear-gradient(90deg, var(--cyan), transparent); }
+  .lcard.v2::before { background: linear-gradient(90deg, var(--violet), transparent); }
+  .lcard.v3::before { background: linear-gradient(90deg, var(--good), transparent); }
+  .lcard .layer { font-family: "Geist Mono", monospace; font-size: 11.5px; color: var(--muted); letter-spacing: .14em; }
+  .lcard h3 { font-size: 18px; font-weight: 600; margin: 12px 0 10px; }
+  .lcard p { color: var(--body); font-size: 14px; }
+
+  /* stat band */
+  .band { padding: 72px 0; }
+  .band-in { border: 1px solid var(--panel-line); border-radius: 24px; background: linear-gradient(135deg, rgba(76,201,240,.08), rgba(139,123,244,.08)); padding: 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; }
+  .bstat .n { font-family: "Space Grotesk", sans-serif; font-size: 46px; font-weight: 700; letter-spacing: -.02em; }
+  .bstat .n em { font-style: normal; background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .bstat .k { color: var(--body); font-size: 14px; margin-top: 6px; max-width: 26ch; }
+
+  /* pricing */
+  .pricing { padding: 20px 0 100px; }
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 46px; }
+  .tier { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 20px; padding: 30px 28px; display: flex; flex-direction: column; }
+  .tier.hot { border-color: rgba(139,123,244,.5); box-shadow: 0 0 60px -20px rgba(139,123,244,.4); }
+  .tier .name { font-size: 14px; font-weight: 600; color: var(--body); }
+  .tier .price { font-family: "Space Grotesk", sans-serif; font-size: 40px; font-weight: 700; margin: 12px 0 2px; }
+  .tier .per { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .tier ul { list-style: none; font-size: 14px; color: var(--body); margin-bottom: 26px; }
+  .tier li { padding: 6px 0 6px 24px; position: relative; }
+  .tier li::before { content: "→"; position: absolute; left: 0; color: var(--cyan); }
+  .tier .btn { margin-top: auto; justify-content: center; }
+
+  footer { border-top: 1px solid var(--panel-line); padding: 30px 0; color: var(--muted); font-size: 13px; }
+  footer .wrap { display: flex; gap: 24px; }
+  footer .right { margin-left: auto; }
+
+  @media (max-width: 940px) {
+    .hero { grid-template-columns: 1fr; padding: 60px 0 40px; }
+    .grid3, .tiers, .band-in { grid-template-columns: 1fr; }
+    .band-in { padding: 34px 28px; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <a class="logo" href="#"><span class="mark">▚</span> RuleKeeper</a>
+    <div class="nav-links">
+      <a href="#layers">Platform</a>
+      <a href="#proof">Proof</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#">Docs</a>
+    </div>
+    <a class="btn" href="#">Start monitoring</a>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <div>
+    <div class="tagline">context health · live from your own transcripts</div>
+    <h1>The <span class="grad">context-health layer</span> for coding agents</h1>
+    <p class="sub">Your instruction files are production infrastructure — but nothing monitors
+      them. RuleKeeper watches what Claude Code, Codex and Cursor actually do with your
+      CLAUDE.md and AGENTS.md, and scores every rule: delivered, effective, dead, or broken.</p>
+    <div class="cta-row">
+      <span class="cmd"><b>$</b> npx rulekeeper scan</span>
+      <a class="btn ghost" href="#proof">View live report</a>
+    </div>
+    <div class="agents">Claude Code · Codex · Cursor — local-first, zero upload</div>
+  </div>
+
+  <div class="panel" id="proof" role="img" aria-label="Context health panel: score gauge and rule signals">
+    <div class="p-head">
+      <span>CONTEXT HEALTH — 5 repos · 59 sessions</span>
+      <span class="live">● live</span>
+    </div>
+    <div class="gauge-row">
+      <div class="gauge">
+        <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+          <circle cx="75" cy="75" r="64" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"/>
+          <circle cx="75" cy="75" r="64" fill="none" stroke="url(#gr)" stroke-width="10"
+                  stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="145"/>
+          <defs>
+            <linearGradient id="gr" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#4cc9f0"/><stop offset="100%" stop-color="#8b7bf4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="val"><div><div class="n">64</div><div class="k">health score</div></div></div>
+      </div>
+      <div class="signals">
+        <div class="signal c"><span class="dot"></span><span class="lbl">Delivery — rules reaching context</span><span class="v">40% ✕</span></div>
+        <div class="signal g"><span class="dot"></span><span class="lbl">verify-ui-in-preview (in context)</span><span class="v">12/12 ✓</span></div>
+        <div class="signal w"><span class="dot"></span><span class="lbl">standard-checks — dead weight</span><span class="v">△ cut</span></div>
+        <div class="signal c"><span class="dot"></span><span class="lbl">cf-typegen after wrangler edit</span><span class="v">0/1 ✕</span></div>
+      </div>
+    </div>
+    <div class="foot">Latest receipt: <b>wrangler.jsonc edited 10× · cf-typegen never ran</b> · session 5e277bbf</div>
+  </div>
+</header>
+
+<section class="layers wrap" id="layers">
+  <div class="sec-kicker">The platform</div>
+  <h2>Three layers, one source of truth: your own transcripts</h2>
+  <div class="grid3">
+    <div class="lcard">
+      <div class="layer">LAYER 01 — SCAN</div>
+      <h3>Local CLI, free forever</h3>
+      <p>One command reads the agent session logs already on your disk and produces the
+         full context-health report. MIT, offline, zero config.</p>
+    </div>
+    <div class="lcard v2">
+      <div class="layer">LAYER 02 — FLEET</div>
+      <h3>Drift across every repo</h3>
+      <p>Near-identical instruction files silently diverge. RuleKeeper diffs the fleet,
+         flags rot vs intentional divergence, and propagates fixes as PRs.</p>
+    </div>
+    <div class="lcard v3">
+      <div class="layer">LAYER 03 — SCORE</div>
+      <h3>Continuous effectiveness</h3>
+      <p>Every rule tracked over time: delivery rate, adherence before/after, dead weight
+         to cut. Wired into CI through the GitHub App.</p>
+    </div>
+  </div>
+</section>
+
+<div class="band wrap">
+  <div class="band-in">
+    <div class="bstat"><div class="n"><em>60%</em></div><div class="k">of sessions never had the rules in context at all</div></div>
+    <div class="bstat"><div class="n">78→<em>93%</em></div><div class="k">adherence after one measured rule was added</div></div>
+    <div class="bstat"><div class="n"><em>12/12</em></div><div class="k">followed when the rule actually reached the agent</div></div>
+  </div>
+</div>
+
+<section class="pricing wrap" id="pricing">
+  <div class="sec-kicker">Pricing</div>
+  <h2>Free to see. Paid to keep watch.</h2>
+  <div class="tiers">
+    <div class="tier">
+      <div class="name">CLI</div>
+      <div class="price">$0</div>
+      <div class="per">local-only · MIT</div>
+      <ul><li>Full health report</li><li>Every rule scored</li><li>Receipts attached</li></ul>
+      <a class="btn ghost" href="#">npx rulekeeper</a>
+    </div>
+    <div class="tier hot">
+      <div class="name">Indie</div>
+      <div class="price">$5</div>
+      <div class="per">per month</div>
+      <ul><li>Fleet drift monitoring</li><li>Weekly trend history</li><li>Hygiene PRs</li></ul>
+      <a class="btn" href="#">Start free</a>
+    </div>
+    <div class="tier">
+      <div class="name">Team</div>
+      <div class="price">$29</div>
+      <div class="per">per month · 10–100 repos</div>
+      <ul><li>Template conformance</li><li>Org findings history</li><li>GitHub App + CI gate</li></ul>
+      <a class="btn ghost" href="#">Talk to us</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>▚ RuleKeeper</span>
+    <span class="right">Local-first · © 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>

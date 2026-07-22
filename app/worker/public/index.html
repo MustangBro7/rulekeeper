@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RuleKeeper — Do your coding agents follow your rules?</title>
+  <meta name="description" content="RuleKeeper joins your CLAUDE.md / AGENTS.md with what Claude Code, Codex and Cursor actually did in your session transcripts — and scores every rule with receipts. Local-first. Your code never leaves the machine.">
+  <meta name="theme-color" content="#0b0f0e">
+  <link rel="canonical" href="https://rulekeeper.dev/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rulekeeper.dev/">
+  <meta property="og:site_name" content="RuleKeeper">
+  <meta property="og:title" content="RuleKeeper — Do your coding agents follow your rules?">
+  <meta property="og:description" content="RuleKeeper joins your CLAUDE.md / AGENTS.md with what Claude Code, Codex and Cursor actually did in your session transcripts — and scores every rule with receipts. Local-first. Your code never leaves the machine.">
+  <meta property="og:image" content="/og.png">
+  <meta property="og:image:alt" content="RuleKeeper evidence terminal">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RuleKeeper — Do your coding agents follow your rules?">
+  <meta name="twitter:description" content="RuleKeeper joins your CLAUDE.md / AGENTS.md with what Claude Code, Codex and Cursor actually did in your session transcripts — and scores every rule with receipts. Local-first. Your code never leaves the machine.">
+  <meta name="twitter:image" content="/og.png">
+  <meta name="twitter:image:alt" content="RuleKeeper evidence terminal">
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"RuleKeeper","operatingSystem":"macOS/Linux","applicationCategory":"DeveloperApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+  </script>
+  <script src="/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <nav aria-label="Primary navigation">
+    <div class="wrap nav-in">
+      <a class="logo" href="#main-content" aria-label="RuleKeeper home"><b aria-hidden="true">▚</b> rulekeeper</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links">
+        <span class="menu-label">menu</span><span aria-hidden="true"> ≡</span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="#how">how it works</a>
+        <a href="#proof">proof</a>
+        <a href="#pricing">pricing</a>
+        <a href="https://github.com/MustangBro7/rulekeeper" rel="noopener">github <span aria-hidden="true">↗</span></a>
+        <a class="btn nav-cta" href="#install">npx rulekeeper-cli</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <header class="hero wrap">
+      <div>
+        <p class="kicker">context health for coding agents</p>
+        <h1>Your agents never read your rules.<br><span class="dim">Now you can prove it.</span></h1>
+        <p class="sub">RuleKeeper joins your CLAUDE.md / AGENTS.md with what Claude Code, Codex and Cursor actually did in your session transcripts — and scores every rule with receipts. Local-first. Your code never leaves the machine.</p>
+        <div class="install" id="install">
+          <code>$ npx rulekeeper-cli scan</code>
+          <button class="copy" type="button" data-copy-command="npx rulekeeper-cli scan">[copy]</button>
+        </div>
+        <p class="copy-status sr-only" aria-live="polite"></p>
+        <p class="hero-note">free CLI · zero config · reads the logs already on your disk</p>
+      </div>
+
+      <div class="term" role="region" aria-label="Terminal output of rulekeeper scan showing rule adherence findings">
+        <div class="term-bar" aria-hidden="true">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="term-title">rulekeeper scan — 4-week backtest</span>
+        </div>
+        <div class="term-body">
+          <span class="rule-line p">$ rulekeeper scan --since 4w</span>
+          <span class="rule-line w">▚ 59 sessions · 3,095 commands · 1,367 edits · 5 repos</span>
+          <span class="rule-line separator" aria-hidden="true">──────────────────────────────────────────────</span>
+          <span class="rule-line"><span class="r">✗ DELIVERY</span><span class="w">  AGENTS.md reached the agent in </span><span class="r">40%</span><span class="w"> of sessions</span></span>
+          <span class="rule-line"><span class="g">✓ WORKS</span><span class="w">    “verify in preview before done” — </span><span class="g">12/12</span><span class="w"> when in context</span></span>
+          <span class="rule-line"><span class="y">△ DEAD</span><span class="w">     “run standard checks” — followed 9/9 </span><span class="y">before the rule existed</span></span>
+          <span class="rule-line"><span class="r">✗ VIOLATION</span><span class="w"> wrangler.jsonc edited 10× · cf-typegen never ran</span></span>
+          <span class="rule-line p">           └ receipt: session 5e277bbf · jul 11 · 102 edits</span>
+          <span class="rule-line separator" aria-hidden="true">──────────────────────────────────────────────</span>
+          <span class="rule-line w">8 of 23 rules never exercised in 4 weeks. <span class="cursor" aria-hidden="true"></span></span>
+        </div>
+      </div>
+    </header>
+
+    <section class="stats" id="proof" aria-label="Validated findings">
+      <div class="wrap stats-in">
+        <div class="stat"><p class="v"><em>60%</em></p><p class="k">of sessions never saw the rules at all</p></div>
+        <div class="stat"><p class="v">78→<em>93%</em></p><p class="k">adherence after one measured rule was added</p></div>
+        <div class="stat"><p class="v"><em>12/12</em></p><p class="k">rule followed when actually delivered</p></div>
+        <div class="stat"><p class="v"><em>8/23</em></p><p class="k">rules never exercised — dead weight</p></div>
+      </div>
+    </section>
+
+    <section class="features wrap" id="how">
+      <p class="sec-kicker">three questions, answered from your own logs</p>
+      <h2>Static linters check your files. RuleKeeper checks your agents.</h2>
+      <div class="grid3">
+        <article class="card">
+          <span class="tag">01 · DELIVERY</span>
+          <h3>Did the rule even reach the agent?</h3>
+          <p>Most instruction files silently never make it into context — wrong directory, wrong filename, wrong tool. RuleKeeper detects per-session whether your rules were actually delivered.</p>
+        </article>
+        <article class="card">
+          <span class="tag">02 · EFFECTIVENESS</span>
+          <h3>Did the rule change behavior?</h3>
+          <p>Every rule gets a before/after and an in-context vs not split, dated by the git commit that introduced it. Keep what works. Delete what agents already do by default.</p>
+        </article>
+        <article class="card">
+          <span class="tag">03 · RECEIPTS</span>
+          <h3>Which sessions broke it?</h3>
+          <p>Every violation links to the exact session, timestamp and edit. No vibes — transcript evidence you can open and read.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="receipt-sec wrap" aria-label="Example violation receipt">
+      <div class="receipt">
+        <div>
+          <p class="q w">“<span class="r">wrangler.jsonc</span> was edited <b>10 times</b> across two repos. <span class="r">cf-typegen</span> — required by the CLAUDE.md that was in context — <b>never ran</b>.”</p>
+          <p class="meta">receipt · session 5e277bbf · 2026-07-11 · 102 edits · hand-verifiable in your own transcript</p>
+        </div>
+        <div class="stamp" aria-label="Rule broken">RULE BROKEN</div>
+      </div>
+    </section>
+
+    <section class="pricing wrap" id="pricing">
+      <p class="sec-kicker">pricing</p>
+      <h2>Free where it counts. Paid where it compounds.</h2>
+      <div class="tiers">
+        <article class="tier">
+          <h3 class="name">CLI</h3>
+          <p class="price">$0</p>
+          <p class="per">forever · local-only</p>
+          <ul><li>full scan + report</li><li>every rule scored</li><li>receipts included</li></ul>
+          <a class="btn ghost" href="#install">npx rulekeeper-cli</a>
+        </article>
+        <article class="tier hot">
+          <h3 class="name">Indie</h3>
+          <p class="price">$5</p>
+          <p class="per">/month</p>
+          <ul><li>fleet drift across repos</li><li>weekly trend history</li><li>hygiene PRs</li></ul>
+          <a class="btn" href="#waitlist">start free</a>
+        </article>
+        <article class="tier">
+          <h3 class="name">Team</h3>
+          <p class="price">$29</p>
+          <p class="per">/month · 10–100 repos</p>
+          <ul><li>template conformance</li><li>org findings history</li><li>GitHub App + CI</li></ul>
+          <a class="btn ghost" href="#waitlist">talk to us</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="waitlist wrap" id="waitlist">
+      <div class="waitlist-panel">
+        <div>
+          <h2>Get the launch report</h2>
+          <p class="waitlist-sub">One email when the CLI ships — with the full 4-week backtest attached.</p>
+        </div>
+        <form class="waitlist-form" data-waitlist-endpoint="/api/waitlist">
+          <label for="email">Email address</label>
+          <div class="form-row">
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            <button class="btn" type="submit">join waitlist</button>
+          </div>
+          <p class="form-status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><span aria-hidden="true">▚</span> rulekeeper</span>
+      <span class="right">local-first · MIT CLI · © 2026</span>
+    </div>
+  </footer>
+</body>
+</html>

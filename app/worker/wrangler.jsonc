@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "rulekeeper",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-19",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rulekeeper",
+      "database_id": "15310d36-2911-4098-bd1f-32f01d0db850",
+      "migrations_dir": "./migrations"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

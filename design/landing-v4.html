@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RuleKeeper — v4 “Field Report” (editorial)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #faf7f2;
+    --ink: #1c1917;
+    --body: #44403c;
+    --muted: #78716c;
+    --line: #e2ddd4;
+    --accent: #9a3412;      /* burnt sienna ink */
+    --accent-soft: #f6e8e0;
+    --blue: #1e4b8f;        /* annotation blue */
+    --good: #2f6b3f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: "Source Serif 4", Georgia, serif; font-size: 18px; line-height: 1.7; }
+  a { color: inherit; }
+  .sans { font-family: Inter, system-ui, sans-serif; }
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+  .wide { max-width: 980px; }
+
+  nav { border-bottom: 1px solid var(--line); background: var(--paper); position: sticky; top: 0; z-index: 10; }
+  .nav-in { max-width: 980px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; height: 62px; gap: 28px; }
+  .logo { font-weight: 700; font-size: 18px; letter-spacing: -.01em; }
+  .logo i { font-style: normal; color: var(--accent); }
+  .nav-links { display: flex; gap: 22px; margin-left: auto; font-family: Inter, sans-serif; font-size: 13.5px; font-weight: 500; color: var(--body); text-decoration: none; }
+  .nav-links a { text-decoration: none; }
+  .nav-links a:hover { color: var(--accent); }
+  .btn { font-family: Inter, sans-serif; display: inline-block; background: var(--ink); color: var(--paper); font-size: 13.5px; font-weight: 600; padding: 10px 20px; border-radius: 4px; text-decoration: none; }
+  .btn:hover { background: var(--accent); }
+  .btn.outline { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+  .btn.outline:hover { color: var(--accent); border-color: var(--accent); background: transparent; }
+
+  .hero { padding: 84px 0 56px; }
+  .eyebrow { font-family: Inter, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin-bottom: 22px; }
+  h1 { font-size: clamp(38px, 5.5vw, 58px); font-weight: 700; line-height: 1.12; letter-spacing: -.015em; margin-bottom: 24px; }
+  .dek { font-size: 21px; color: var(--body); line-height: 1.6; margin-bottom: 30px; }
+  .byline { font-family: Inter, sans-serif; font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 12px 0; display: flex; gap: 18px; flex-wrap: wrap; }
+  .cta-row { margin-top: 30px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .cmd { font-family: "Geist Mono", monospace; font-size: 13.5px; background: #fff; border: 1px solid var(--line); padding: 11px 18px; border-radius: 4px; }
+
+  /* drop stat */
+  .figure { margin: 56px 0; padding: 0; }
+  .figure .stat-row { display: grid; grid-template-columns: auto 1fr; gap: 36px; align-items: start; }
+  .dropstat { font-size: clamp(90px, 14vw, 150px); font-weight: 700; line-height: .9; color: var(--accent); font-variant-numeric: lining-nums; }
+  .figure p { font-size: 20px; }
+  .figure .note { font-family: Inter, sans-serif; font-size: 13px; color: var(--muted); margin-top: 14px; }
+  .figure .note a { color: var(--blue); }
+
+  .prose h2 { font-size: 29px; font-weight: 700; margin: 56px 0 18px; letter-spacing: -.01em; }
+  .prose p { margin-bottom: 20px; }
+  .prose .lead-in { font-family: Inter, sans-serif; font-weight: 700; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+
+  /* annotated evidence block */
+  .evidence { background: #fff; border: 1px solid var(--line); border-radius: 6px; margin: 34px 0; overflow: hidden; }
+  .evidence .head { font-family: Inter, sans-serif; font-size: 12.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 12px 20px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; }
+  .evidence .head .right { margin-left: auto; color: var(--accent); }
+  .evidence pre { font-family: "Geist Mono", monospace; font-size: 13px; line-height: 1.8; padding: 18px 20px; overflow-x: auto; color: var(--body); }
+  .evidence .hl { background: var(--accent-soft); color: var(--accent); padding: 1px 4px; border-radius: 3px; }
+  .evidence .ok { color: var(--good); }
+  .margin-note { font-family: Inter, sans-serif; font-size: 13.5px; color: var(--blue); border-left: 2px solid var(--blue); padding: 2px 0 2px 14px; margin: 26px 0 26px 0; }
+
+  /* findings table */
+  .findings { margin: 40px 0 8px; border-top: 2px solid var(--ink); }
+  .finding { display: grid; grid-template-columns: 120px 1fr auto; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .finding .no { font-family: Inter, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .1em; color: var(--muted); }
+  .finding .what { font-size: 17px; }
+  .finding .stat { font-family: Inter, sans-serif; font-weight: 700; font-size: 17px; white-space: nowrap; }
+  .finding .stat.bad { color: var(--accent); }
+  .finding .stat.good { color: var(--good); }
+
+  /* pricing strip */
+  .pricing { margin: 72px 0 90px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  .pricing .p-head { padding: 26px 30px 0; }
+  .pricing h2 { font-size: 26px; margin-bottom: 6px; }
+  .pricing .p-sub { font-family: Inter, sans-serif; color: var(--muted); font-size: 14px; }
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); padding: 24px 30px 30px; gap: 0; }
+  .tier { padding: 20px 24px; border-left: 1px solid var(--line); }
+  .tier:first-child { border-left: none; padding-left: 0; }
+  .tier .name { font-family: Inter, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .tier .price { font-size: 34px; font-weight: 700; margin: 8px 0 2px; }
+  .tier .per { font-family: Inter, sans-serif; font-size: 12.5px; color: var(--muted); margin-bottom: 12px; }
+  .tier p { font-family: Inter, sans-serif; font-size: 13.5px; color: var(--body); margin-bottom: 16px; }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0 40px; }
+  footer .wrap { display: flex; gap: 22px; font-family: Inter, sans-serif; font-size: 13px; color: var(--muted); }
+  footer .right { margin-left: auto; }
+
+  @media (max-width: 760px) {
+    .figure .stat-row { grid-template-columns: 1fr; gap: 8px; }
+    .finding { grid-template-columns: 1fr; gap: 4px; }
+    .tiers { grid-template-columns: 1fr; }
+    .tier { border-left: none; border-top: 1px solid var(--line); padding-left: 0; }
+    .tier:first-child { border-top: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <a class="logo" style="text-decoration:none" href="#">Rule<i>keeper</i></a>
+    <div class="nav-links">
+      <a href="#findings">Findings</a>
+      <a href="#method">Method</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#">GitHub</a>
+    </div>
+    <a class="btn" href="#">Run it on your logs</a>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <div class="eyebrow">A field report on instruction files</div>
+  <h1>We measured what coding agents actually do with your instructions.</h1>
+  <p class="dek">Everyone writes CLAUDE.md and AGENTS.md files. Nobody measures whether
+    they work. So we joined four weeks of real agent transcripts — 59 sessions, 3,095
+    commands — against every rule in the instruction files they were supposed to follow.
+    The results changed how we write them.</p>
+  <div class="byline">
+    <span>59 sessions · Claude Code + Codex</span>
+    <span>4-week backtest</span>
+    <span>Every finding reproducible with the free CLI</span>
+  </div>
+  <div class="cta-row">
+    <span class="cmd">$ npx rulekeeper scan</span>
+    <a class="btn outline" href="#findings">Read the findings ↓</a>
+  </div>
+</header>
+
+<div class="wrap figure">
+  <div class="stat-row">
+    <div class="dropstat">60<span style="font-size:.55em">%</span></div>
+    <div>
+      <p>of agent sessions touching the busiest repo <em>never had the instruction file
+      in context at all.</em> Before asking whether a rule works, you have to ask whether
+      it was ever delivered — and mostly, it wasn’t.</p>
+      <div class="note">Finding 1 of 6, <a href="#">RULEKEEPER_PROOF.md</a> — delivery detected
+      per-session from transcript content markers.</div>
+    </div>
+  </div>
+</div>
+
+<article class="prose wrap" id="findings">
+  <h2><span class="lead-in">Finding 2 —</span> When a rule is delivered, it works</h2>
+  <p>One repo carried a hard requirement: <em>verify UI changes in a live preview before
+  calling the task done.</em> The rule was added mid-window, which gave us a natural
+  experiment. Adherence went from 78% before the rule existed to 93% after — and in the
+  twelve sessions where the file was demonstrably in context, adherence was <strong>twelve
+  for twelve.</strong> The single violation came from a session that never saw the file.</p>
+
+  <div class="margin-note">Rules are dated by the git commit that introduced them —
+  sessions older than a rule are never accused. That’s what makes before/after
+  measurement honest.</div>
+
+  <h2><span class="lead-in">Finding 3 —</span> Some rules were already dead on arrival</h2>
+  <p>The adjacent rule in the same file — “run standard checks” — was followed nine times
+  out of nine <em>before it was ever written.</em> Agents do this by default. The line is
+  dead weight, and it isn’t alone: 8 of the 23 rules we scored were never exercised once
+  in four weeks.</p>
+
+  <h2><span class="lead-in">Finding 4 —</span> Violations, with receipts</h2>
+  <div class="evidence">
+    <div class="head">
+      <span>Transcript receipt</span>
+      <span class="mono">session 5e277bbf · 2026-07-11</span>
+      <span class="right">RULE BROKEN</span>
+    </div>
+    <pre>
+rule    <span class="ok">“add a binding to wrangler.jsonc → run cf-typegen”</span>  (in context ✓)
+found   wrangler.jsonc edited <span class="hl">10×</span> across two repos
+        cf-typegen ran <span class="hl">0 times</span> — worker types left stale in both
+</pre>
+  </div>
+  <p>Every verdict links to the session, timestamp, and edit that produced it. Open your
+  own transcript and check. No vibes — receipts.</p>
+
+  <h2 id="method"><span class="lead-in">The method —</span> in one paragraph</h2>
+  <p>RuleKeeper reads the session logs your agents already write to disk, attributes each
+  session to the repos it touched, extracts machine-checkable rules from your instruction
+  files, and scores them: <em>delivered? followed? violated? dead?</em> Local-first — your
+  code and transcripts never leave the machine.</p>
+
+  <div class="findings">
+    <div class="finding"><span class="no">DELIVERY</span><span class="what">Sessions where rules actually reached the agent</span><span class="stat bad">40%</span></div>
+    <div class="finding"><span class="no">EFFECT</span><span class="what">Adherence when the rule was in context</span><span class="stat good">12/12</span></div>
+    <div class="finding"><span class="no">BEFORE/AFTER</span><span class="what">Adherence after the measured rule was added</span><span class="stat good">78 → 93%</span></div>
+    <div class="finding"><span class="no">DEAD WEIGHT</span><span class="what">Rules never exercised in four weeks</span><span class="stat bad">8 of 23</span></div>
+  </div>
+</article>
+
+<div class="wrap wide">
+  <div class="pricing" id="pricing">
+    <div class="p-head">
+      <h2>Run the same audit on your machine</h2>
+      <div class="p-sub">The CLI is free and local-only. Paid tiers add the fleet layer.</div>
+    </div>
+    <div class="tiers">
+      <div class="tier">
+        <div class="name">CLI</div>
+        <div class="price">$0</div>
+        <div class="per">local-only · MIT</div>
+        <p>Full audit, every rule scored, receipts attached.</p>
+        <a class="btn outline" href="#">npx rulekeeper</a>
+      </div>
+      <div class="tier">
+        <div class="name">Indie</div>
+        <div class="price">$5</div>
+        <div class="per">per month</div>
+        <p>Fleet drift across repos, weekly trends, hygiene PRs.</p>
+        <a class="btn" href="#">Start free</a>
+      </div>
+      <div class="tier">
+        <div class="name">Team</div>
+        <div class="price">$29</div>
+        <div class="per">per month · 10–100 repos</div>
+        <p>Template conformance, org history, GitHub App + CI.</p>
+        <a class="btn outline" href="#">Talk to us</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap wide" style="display:flex">
+    <span>Rulekeeper — a field report that became a product</span>
+    <span class="right" style="margin-left:auto">Local-first · © 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>

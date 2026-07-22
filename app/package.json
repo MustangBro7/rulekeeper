@@ -1,0 +1,12 @@
+{
+  "name": "rulekeeper-workspace",
+  "private": true,
+  "workspaces": ["cli", "worker"],
+  "scripts": {
+    "check": "npm --prefix cli run check && npm --prefix worker run check",
+    "test": "npm --prefix cli test && npm --prefix worker test",
+    "build": "npm --prefix cli run build",
+    "deploy": "npm --prefix worker run deploy",
+    "verify": "npm run check && npm test && npm run build"
+  }
+}

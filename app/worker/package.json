@@ -14,7 +14,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test test/*.test.mjs"
+    "check": "wrangler types && tsc --noEmit",
+    "test": "wrangler types && node --experimental-strip-types --test test/*.test.mjs",
+    "cf-typegen": "wrangler types"
   }
 }

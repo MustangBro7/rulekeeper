@@ -1,5 +1,5 @@
 import type { Claim, ClaimKind, Finding, Severity } from "./types.js";
-import { commitsSince, pathExistsAnywhere, type PackageManager, type RepoFacts } from "./repo.js";
+import { commitsSince, isIgnored, pathExistsAnywhere, type PackageManager, type RepoFacts } from "./repo.js";
 
 const SEVERITY: Record<string, Severity> = {
   "missing-path": "error",
@@ -69,6 +69,7 @@ function finding(
 function verifyPath(claim: Claim, facts: RepoFacts): Finding | undefined {
   const resolved = pathExistsAnywhere(facts, claim.value);
   if (resolved !== undefined) return undefined;
+  if (isIgnored(facts.root, claim.value)) return undefined;
   const base = claim.value.split("/").pop() ?? claim.value;
   const sameName = [...facts.files].filter((file) => file.endsWith(`/${base}`) || file === base).slice(0, 1)[0];
   const suggestion = sameName ?? nearest(claim.value, [...facts.files].slice(0, 4_000));

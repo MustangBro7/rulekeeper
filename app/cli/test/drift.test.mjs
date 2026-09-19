@@ -162,3 +162,35 @@ test("vendor-owned repositories are not attributed to the user", async () => {
   assert.equal(isVendorRoot("/Users/example/code/my-app", home), false);
   assert.equal(isVendorRoot("/Volumes/X10 Pro/projects/rulekeeper", home), false);
 });
+
+test("gitignored build output is not reported as a missing path", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const { isIgnored } = await import("../dist/drift/repo.js");
+  const root = fixture({
+    ".gitignore": "dist/\n*.log\n",
+    "package.json": JSON.stringify({ scripts: { build: "tsc" } }),
+    "src/index.ts": "export const x = 1;",
+    "CLAUDE.md": "Build output lands in `dist`. Entry point is `src/index.ts`.",
+  });
+  execFileSync("git", ["-C", root, "init", "-q"], { stdio: "ignore" });
+
+  // A directory-only pattern cannot match a path git cannot stat, so the absent
+  // directory must still be recognised as ignored.
+  assert.equal(isIgnored(root, "dist"), true);
+  assert.equal(isIgnored(root, "dist/"), true);
+  assert.equal(isIgnored(root, "src"), false);
+  assert.equal(isIgnored(root, "src/index.ts"), false);
+
+  const repo = analyzeRepo(root, { noHistory: true });
+  assert.deepEqual(repo.findings.filter((f) => f.code === "missing-path"), []);
+  assert.equal(repo.score, 100);
+});
+
+test("a genuinely missing path is still reported when git is unavailable", () => {
+  const root = fixture({
+    "package.json": "{}",
+    "CLAUDE.md": "Handlers live in `src/handlers.ts`.",
+  });
+  const repo = analyzeRepo(root, { noHistory: true });
+  assert.equal(repo.findings.filter((f) => f.code === "missing-path").length, 1);
+});

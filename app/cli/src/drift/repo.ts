@@ -200,6 +200,37 @@ function collectEnvVars(root: string, files: Set<string>): Set<string> {
   return vars;
 }
 
+const ignoreCache = new Map<string, boolean>();
+
+/**
+ * Build outputs like dist/ are legitimately described by a doc but absent from a clean
+ * checkout. Git already knows which paths those are, so ask it rather than guessing.
+ */
+export function isIgnored(root: string, path: string): boolean {
+  const key = `${root}\u0000${path}`;
+  const cached = ignoreCache.get(key);
+  if (cached !== undefined) return cached;
+
+  const clean = path.replace(/\/+$/, "");
+  // A directory-only pattern such as "dist/" cannot match a path that no longer exists,
+  // because git has nothing to stat. Asking again with a trailing slash supplies the hint.
+  const ignored = [clean, `${clean}/`].some((candidate) => {
+    try {
+      execFileSync("git", ["-C", root, "check-ignore", "-q", "--", candidate], {
+        timeout: 5_000,
+        stdio: ["ignore", "ignore", "ignore"],
+      });
+      return true;
+    } catch {
+      // Exit 1 means "not ignored"; any other failure means git could not tell us, and a
+      // missing answer must never suppress a real finding.
+      return false;
+    }
+  });
+  ignoreCache.set(key, ignored);
+  return ignored;
+}
+
 export function lastCommitDate(root: string, file: string): string {
   try {
     return execFileSync("git", ["-C", root, "log", "-1", "--format=%aI", "--", file], {

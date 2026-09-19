@@ -38,9 +38,10 @@
         <a href="#drift">drift</a>
         <a href="#adherence">adherence</a>
         <a href="#privacy">privacy</a>
+        <a href="#dashboard">dashboard</a>
         <a href="#ci">ci</a>
         <a href="https://github.com/MustangBro7/rulekeeper" rel="noopener">github ↗</a>
-        <a class="btn nav-cta" href="#install">Install</a>
+        <a class="btn nav-cta" href="/app">Sign in</a>
       </div>
     </div>
   </nav>
@@ -62,7 +63,7 @@
           <code><em>$</em> npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz</code>
           <button class="copy" type="button" data-copy="npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz">copy</button>
         </div>
-        <a class="btn btn-ghost" href="#drift">See what it catches</a>
+        <a class="btn btn-ghost" href="/app">Open the dashboard</a>
       </div>
       <p class="hero-note">free &amp; MIT · zero runtime dependencies · nothing leaves your machine</p>
       <p class="copy-status sr-only" aria-live="polite"></p>
@@ -222,6 +223,52 @@
       </div>
     </section>
 
+
+    <!-- ── Dashboard ────────────────────────────────────── -->
+    <section class="product product--adhere" id="dashboard">
+      <div class="wrap">
+        <p class="sec-kicker">the dashboard</p>
+        <h2 class="sec">One number that tells you whether your docs are rotting.</h2>
+        <p class="sec-sub">
+          The CLI answers the question today. The dashboard answers it over time: connect a repository,
+          drop in the Action, and every push records a truth score you can watch — with the findings,
+          the fixes, and the commit that broke it.
+        </p>
+
+        <div class="product-grid">
+          <ul class="checklist reveal">
+            <li><b>Truth score over time.</b> A line that trends down is a doc quietly drifting away from the code.</li>
+            <li><b>Every finding, triaged.</b> Filter by severity, read the doc line and the repo's actual state side by side.</li>
+            <li><b>Accept what you meant.</b> Some findings are intentional. Accept them once and they stop failing the build — everywhere, for everyone.</li>
+            <li><b>Run history.</b> Branch, commit and score for every run, so you can point at exactly when it broke.</li>
+            <li><b>Free, and your code stays put.</b> Reports are generated in your runner. We store counts, findings and quotes from your own docs — never your source.</li>
+          </ul>
+
+          <div class="term reveal" role="img" aria-label="Dashboard project view showing a truth score of 55 out of 100, a trend chart across nine runs, and a list of open findings.">
+            <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="term-title">rulekeeper.dev/app — acme-dashboard</span></div>
+            <code class="term-body">
+<span class="line"><span class="d">truth score  </span><span class="r b">55</span><span class="d">/100</span><span class="w">   claims 11   errors 2   warns 3</span></span>
+<span class="line"> </span>
+<span class="line d">100 ┤                                        </span>
+<span class="line"><span class="d"> 90 ┤</span><span class="g">  ●───●        ●───●        ●         </span></span>
+<span class="line"><span class="d"> 80 ┤</span><span class="g"> ╱      ╲    ╱      ╲    ╱   ╲        </span></span>
+<span class="line"><span class="d"> 70 ┤</span><span class="g">●         ●─╱         ●─╱     ╲       </span></span>
+<span class="line"><span class="d"> 60 ┤</span><span class="w">                               ╲      </span></span>
+<span class="line"><span class="d"> 50 ┤</span><span class="r">                                ●     </span></span>
+<span class="line d">    └──────────────────────────────────────</span>
+<span class="line d">     sep 05                          sep 19</span>
+<span class="line"> </span>
+<span class="line"><span class="r">✗ ERROR</span><span class="d">  CLAUDE.md:13  </span><span class="b">src/handlers.ts</span><span class="w">   [accept]</span></span>
+<span class="line"><span class="r">✗ ERROR</span><span class="d">  CLAUDE.md:19  </span><span class="b">typecheck</span><span class="w">         [accept]</span></span>
+<span class="line"><span class="y">⚠ WARN </span><span class="d">  CLAUDE.md:5   </span><span class="b">pnpm</span><span class="w">              [accept]</span></span>
+<span class="line"> </span>
+<span class="line w">run history · master · deadbee · 55 <span class="cursor" aria-hidden="true"></span></span>
+            </code>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ── CI ───────────────────────────────────────────── -->
     <section class="product product--drift" id="ci">
       <div class="wrap ci-grid">
@@ -229,9 +276,9 @@
           <p class="sec-kicker">continuous integrity</p>
           <h2 class="sec">Fail the build when the doc stops being true.</h2>
           <p class="sec-sub">
-            <code>drift</code> reads no transcripts and makes no network calls, so it belongs in CI
-            next to your linter. It exits non-zero on errors — add <code>--strict</code> to fail on
-            warnings too.
+            <code>drift</code> belongs in CI next to your linter. The Action fails the build on errors, posts a
+            summary comment on the pull request, and records the score on your dashboard. Findings you
+            have accepted never fail anyone’s build again.
           </p>
           <a class="btn btn-ghost" href="https://github.com/MustangBro7/rulekeeper" rel="noopener">Read the docs ↗</a>
         </div>
@@ -247,8 +294,9 @@
         <span class="k">with</span>: { <span class="k">fetch-depth</span>: 0 }
       - <span class="k">uses</span>: actions/setup-node@v4
         <span class="k">with</span>: { <span class="k">node-version</span>: 20 }
-      - <span class="k">run</span>: npm i -g <span class="s">rulekeeper-cli.tgz</span>
-      - <span class="k">run</span>: rulekeeper drift <span class="c">--strict</span></pre>
+      - <span class="k">uses</span>: <span class="s">MustangBro7/rulekeeper@v2</span>
+        <span class="k">with</span>:
+          <span class="k">token</span>: ${{ secrets.RULEKEEPER_TOKEN }}</pre>
       </div>
     </section>
 
@@ -293,13 +341,11 @@
         </div>
       </div>
 
-      <form class="waitlist" data-waitlist-endpoint="/api/waitlist">
-        <label class="sr-only" for="email">Email address</label>
-        <input id="email" name="email" type="email" required placeholder="you@company.com" autocomplete="email">
-        <button type="submit">Get the hosted dashboard</button>
-      </form>
-      <p class="waitlist-note">team dashboards &amp; trend history — in development. the CLI stays free.</p>
-      <p class="waitlist-status" role="status" aria-live="polite"></p>
+      <div class="hero-cta" style="margin-top:26px">
+        <a class="btn" href="/app">Sign in with GitHub — free</a>
+        <a class="btn btn-ghost" href="/app/docs">Read the setup guide</a>
+      </div>
+      <p class="waitlist-note">no card, no seats, no code upload. the CLI works without an account at all.</p>
     </section>
 
   </main>

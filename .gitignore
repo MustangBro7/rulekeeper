@@ -7,3 +7,4 @@ worker-configuration.d.ts
 .DS_Store
 *.log
 __pycache__/
+.dev.vars

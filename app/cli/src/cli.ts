@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { scan } from "./pipeline.js";
 import { runDrift } from "./drift/pipeline.js";
 import { renderDriftMarkdown, renderDriftTerminal } from "./drift/render.js";
+import { fetchBaseline, fingerprint, uploadReport } from "./drift/upload.js";
 import { writeJson } from "./report/json.js";
 import { renderTerminal } from "./report/terminal.js";
 import { deleteShare, shareReport } from "./share.js";
@@ -26,6 +27,9 @@ drift — static check, no logs read, safe in CI
   --dir <repo>        Repository to check (default: current directory)
   --strict            Exit non-zero on warnings as well as errors
   --no-history        Skip git-history checks (staleness)
+  --report            Report the result to the RuleKeeper dashboard
+  --token <token>     Ingest token (or set RULEKEEPER_TOKEN)
+  --api <url>         Dashboard URL (or set RULEKEEPER_API)
   --json <path>       JSON output (default: ./${OUT_DIR}/drift.json)
   --md <path>         Markdown output (default: ./${OUT_DIR}/drift.md)
 
@@ -90,8 +94,9 @@ function outputPath(args: string[], flag: string, fallback: string): string {
   return path;
 }
 
-function runDriftCommand(args: string[]): void {
+async function runDriftCommand(args: string[]): Promise<void> {
   const color = !args.includes("--no-color");
+  const strict = args.includes("--strict");
   const report = runDrift({
     ...(requireOption(args, "--dir") ? { dir: requireOption(args, "--dir") as string } : {}),
     ...(args.includes("--no-history") ? { noHistory: true } : {}),
@@ -99,8 +104,28 @@ function runDriftCommand(args: string[]): void {
   writeJson(report, outputPath(args, "--json", "drift.json"));
   writeFileSync(outputPath(args, "--md", "drift.md"), renderDriftMarkdown(report), "utf8");
   if (!args.includes("--quiet")) console.log(renderDriftTerminal(report, color));
-  const failing = report.totals.errors + (args.includes("--strict") ? report.totals.warnings : 0);
-  if (failing > 0) process.exitCode = 1;
+
+  const token = requireOption(args, "--token") ?? process.env.RULEKEEPER_TOKEN;
+  const api = requireOption(args, "--api") ?? process.env.RULEKEEPER_API;
+  const reporting = args.includes("--report") || Boolean(token && args.includes("--report"));
+
+  let accepted = new Set<string>();
+  if (reporting) {
+    if (!token) throw new Error("--report needs an ingest token: pass --token or set RULEKEEPER_TOKEN");
+    accepted = await fetchBaseline(token, api);
+    const result = await uploadReport(report, { token, api });
+    console.log(`\nReported to ${result.url} (score ${result.score}/100${result.accepted > 0 ? `, ${result.accepted} accepted` : ""})`);
+  }
+
+  const findings = report.repos.flatMap(repo => repo.findings).filter(finding => !accepted.has(fingerprint(finding)));
+  const failing = findings.filter(finding => finding.severity === "error" || (strict && finding.severity === "warn"));
+  if (failing.length > 0) {
+    const skipped = report.totals.errors + (strict ? report.totals.warnings : 0) - failing.length;
+    console.error(`\n${failing.length} finding(s) fail this build${skipped > 0 ? ` (${skipped} accepted on the dashboard)` : ""}.`);
+    process.exitCode = 1;
+  } else if (accepted.size > 0) {
+    console.log("All remaining findings are accepted on the dashboard.");
+  }
 }
 
 function runAdherenceCommand(args: string[]): void {
@@ -145,7 +170,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     else throw new Error(`Unknown demo: ${which}. Try "rulekeeper demo drift" or "rulekeeper demo adherence".`);
     return;
   }
-  if (command === "drift") return runDriftCommand(args);
+  if (command === "drift") return await runDriftCommand(args);
   if (command === "adherence") return runAdherenceCommand(args);
   if (command === "share") {
     const deleteId = requireOption(args, "--delete");

@@ -1,0 +1,130 @@
+name: RuleKeeper drift
+description: Check that CLAUDE.md / AGENTS.md still describe the repository that actually exists.
+author: MustangBro7
+branding:
+  icon: check-square
+  color: green
+
+inputs:
+  token:
+    description: RuleKeeper ingest token. Omit to run the check without reporting to the dashboard.
+    required: false
+    default: ""
+  api:
+    description: RuleKeeper API base URL.
+    required: false
+    default: https://rulekeeper.abhinavmohan12.workers.dev
+  strict:
+    description: Fail the build on warnings as well as errors.
+    required: false
+    default: "false"
+  working-directory:
+    description: Directory to check.
+    required: false
+    default: "."
+  comment:
+    description: Post a summary comment on pull requests (needs pull-requests:write).
+    required: false
+    default: "true"
+  version:
+    description: CLI release tag to install.
+    required: false
+    default: latest
+
+outputs:
+  score:
+    description: Truth score out of 100.
+    value: ${{ steps.drift.outputs.score }}
+  errors:
+    description: Number of open errors.
+    value: ${{ steps.drift.outputs.errors }}
+  warnings:
+    description: Number of open warnings.
+    value: ${{ steps.drift.outputs.warnings }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install RuleKeeper
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ "${{ inputs.version }}" = "latest" ]; then
+          url="https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz"
+        else
+          url="https://github.com/MustangBro7/rulekeeper/releases/download/${{ inputs.version }}/rulekeeper-cli.tgz"
+        fi
+        npm install -g "$url" --silent
+
+    - name: Check instruction drift
+      id: drift
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        RULEKEEPER_TOKEN: ${{ inputs.token }}
+        RULEKEEPER_API: ${{ inputs.api }}
+      run: |
+        set -uo pipefail
+        args=(drift --no-color)
+        [ "${{ inputs.strict }}" = "true" ] && args+=(--strict)
+        [ -n "${RULEKEEPER_TOKEN}" ] && args+=(--report)
+
+        set +e
+        rulekeeper "${args[@]}" 2>&1 | tee /tmp/rulekeeper-output.txt
+        status=${PIPESTATUS[0]}
+        set -e
+
+        report=rulekeeper-report/drift.json
+        if [ -f "$report" ]; then
+          node -e '
+            const r = require("fs").readFileSync(process.argv[1], "utf8");
+            const j = JSON.parse(r);
+            const out = process.env.GITHUB_OUTPUT;
+            const line = (k, v) => require("fs").appendFileSync(out, `${k}=${v}\n`);
+            line("score", j.repos?.[0]?.score ?? 0);
+            line("errors", j.totals.errors);
+            line("warnings", j.totals.warnings);
+            line("claims", j.totals.claims);
+          ' "$report"
+        fi
+
+        {
+          echo "## ▚ RuleKeeper"
+          echo
+          echo '```'
+          cat /tmp/rulekeeper-output.txt
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        exit $status
+
+    - name: Comment on the pull request
+      if: ${{ always() && inputs.comment == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -uo pipefail
+        score="${{ steps.drift.outputs.score }}"
+        errors="${{ steps.drift.outputs.errors }}"
+        warnings="${{ steps.drift.outputs.warnings }}"
+        [ -z "$score" ] && exit 0
+
+        verdict="✅ every checkable claim still matches the repository"
+        if [ "${errors:-0}" != "0" ]; then
+          verdict="❌ ${errors} error(s) — the instructions describe code that does not exist"
+        elif [ "${warnings:-0}" != "0" ]; then
+          verdict="⚠️ ${warnings} warning(s)"
+        fi
+
+        body=$(printf '## ▚ RuleKeeper — truth score %s/100\n\n%s\n\n<details><summary>Full report</summary>\n\n```\n%s\n```\n\n</details>\n' \
+          "$score" "$verdict" "$(cat /tmp/rulekeeper-output.txt)")
+
+        # Replace our previous comment rather than stacking one per push.
+        existing=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments" \
+          --jq '.[] | select(.body | startswith("## ▚ RuleKeeper")) | .id' 2>/dev/null | head -1 || true)
+        if [ -n "$existing" ]; then
+          gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${existing}" -f body="$body" >/dev/null || true
+        else
+          gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments" -f body="$body" >/dev/null || true
+        fi

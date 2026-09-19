@@ -1,6 +1,6 @@
 import type { User } from "./auth.ts";
 import type { DriftFinding, DriftReport } from "./reports.ts";
-import type { Mute, Project, ProjectSummary, Run } from "./projects.ts";
+import type { CachedRepo, Mute, Project, ProjectSummary, Run } from "./projects.ts";
 import {
   delta,
   escapeHtml,
@@ -32,7 +32,13 @@ export function loginPage(error?: string): string {
   );
 }
 
-export function projectsPage(user: User, projects: ProjectSummary[], flash?: string, error?: string): string {
+export function projectsPage(
+  user: User,
+  projects: ProjectSummary[],
+  repos: CachedRepo[] = [],
+  flash?: string,
+  error?: string,
+): string {
   const cards = projects
     .map((project) => {
       const score = project.latest?.score ?? null;
@@ -83,17 +89,28 @@ export function projectsPage(user: User, projects: ProjectSummary[], flash?: str
     <div class="panel" style="margin-bottom:22px">
       <div class="panel-head"><h2>Add a repository</h2></div>
       <div class="panel-body">
-        <form method="post" action="/app/projects" class="row">
+        <form method="post" action="/app/projects" class="row form-add">
           <div class="field">
             <label for="slug">Repository</label>
-            <input id="slug" name="slug" type="text" placeholder="owner/repo" required autocomplete="off">
-            <p class="hint">Just an identifier for the dashboard — we never clone it.</p>
+            <input id="slug" name="slug" type="text" list="repo-options" placeholder="${repos.length ? "start typing, or pick one" : "owner/repo"}" required autocomplete="off">
+            ${
+              repos.length
+                ? `<datalist id="repo-options">${repos
+                    .map((repo) => `<option value="${escapeHtml(repo.full_name)}">${repo.private ? "private" : "public"}</option>`)
+                    .join("")}</datalist>`
+                : ""
+            }
           </div>
-          <div class="field" style="flex:0 1 180px">
+          <div class="field field-narrow">
             <label for="branch">Default branch</label>
             <input id="branch" name="default_branch" type="text" value="main" autocomplete="off">
           </div>
           <button class="btn" type="submit">Add project</button>
+          <p class="hint row-hint">${
+            repos.length
+              ? `${repos.length} repositor${repos.length === 1 ? "y" : "ies"} from your GitHub account. Not listed? Type any name — we only use it as a label, and never clone it. <a href="/auth/github">Refresh from GitHub</a>`
+              : `Type <code>owner/repo</code>. It is only a label for the dashboard — we never clone it. <a href="/auth/github">Sign in again</a> to load your repository list.`
+          }</p>
         </form>
       </div>
     </div>

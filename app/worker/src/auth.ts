@@ -171,6 +171,52 @@ export async function fetchProfile(accessToken: string): Promise<GitHubProfile> 
   return body;
 }
 
+export interface GitHubRepo {
+  full_name: string;
+  private: boolean;
+  pushed_at: string | null;
+}
+
+/**
+ * Reads the repositories this token can see. We hold the access token only for the
+ * duration of the callback, so this runs once at sign-in and the names are cached.
+ * Never throws: a failure here must not block someone signing in.
+ */
+export async function fetchRepos(accessToken: string): Promise<GitHubRepo[]> {
+  const repos: GitHubRepo[] = [];
+  try {
+    for (let page = 1; page <= 3; page += 1) {
+      const url = new URL("https://api.github.com/user/repos");
+      url.searchParams.set("per_page", "100");
+      url.searchParams.set("sort", "pushed");
+      url.searchParams.set("affiliation", "owner,collaborator,organization_member");
+      url.searchParams.set("page", String(page));
+      const response = await fetch(url, {
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+          accept: "application/vnd.github+json",
+          "user-agent": "rulekeeper",
+        },
+      });
+      if (!response.ok) break;
+      const body = (await response.json()) as Array<{ full_name?: unknown; private?: unknown; pushed_at?: unknown }>;
+      if (!Array.isArray(body) || body.length === 0) break;
+      for (const item of body) {
+        if (typeof item.full_name !== "string") continue;
+        repos.push({
+          full_name: item.full_name,
+          private: item.private === true,
+          pushed_at: typeof item.pushed_at === "string" ? item.pushed_at : null,
+        });
+      }
+      if (body.length < 100) break;
+    }
+  } catch {
+    // A GitHub outage degrades the picker to free text, nothing more.
+  }
+  return repos;
+}
+
 /** Resolves the ingest token on a request, returning the project it belongs to. */
 export async function projectFromToken(
   db: D1Database,

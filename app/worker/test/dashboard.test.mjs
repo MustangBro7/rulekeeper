@@ -226,3 +226,46 @@ test("docs page explains what fails a build", () => {
   assert.match(html, /rulekeeper drift/);
   assert.match(html, /with <code>strict<\/code>/);
 });
+
+/* ── Add-project form ────────────────────────────── */
+
+test("the add-project form offers the user's repositories as a picker", () => {
+  const html = projectsPage(user, [], [
+    { full_name: "MustangBro7/rulekeeper", private: 0, pushed_at: "2026-09-19T00:00:00Z" },
+    { full_name: "MustangBro7/secret-thing", private: 1, pushed_at: "2026-09-18T00:00:00Z" },
+  ]);
+  assert.match(html, /<datalist id="repo-options">/);
+  assert.match(html, /value="MustangBro7\/rulekeeper"/);
+  assert.match(html, /value="MustangBro7\/secret-thing"/);
+  assert.match(html, /list="repo-options"/);
+  assert.match(html, /2 repositories from your GitHub account/);
+});
+
+test("the form still accepts free text when no repositories are cached", () => {
+  const html = projectsPage(user, [], []);
+  assert.doesNotMatch(html, /<datalist/);
+  assert.match(html, /placeholder="owner\/repo"/);
+  assert.match(html, /Sign in again/);
+});
+
+test("repository names are escaped in the picker", () => {
+  const html = projectsPage(user, [], [{ full_name: 'a"><script>x</script>', private: 0, pushed_at: null }]);
+  assert.doesNotMatch(html, /<script>x/);
+  assert.match(html, /&quot;&gt;&lt;script&gt;/);
+});
+
+test("no field inside the form row carries a hint that could misalign the inputs", () => {
+  const html = projectsPage(user, [], [{ full_name: "a/b", private: 0, pushed_at: null }]);
+  const form = /<form[^>]*class="row form-add"[\s\S]*?<\/form>/.exec(html)?.[0] ?? "";
+  assert.ok(form, "expected the add-project form");
+  // A hint nested in a .field is what pushed the Repository input out of line.
+  for (const field of form.match(/<div class="field[^"]*">[\s\S]*?<\/div>/g) ?? []) {
+    assert.doesNotMatch(field, /class="hint"/, "hints must live outside .field, on the row");
+  }
+  assert.match(form, /class="hint row-hint"/);
+});
+
+test("singular wording when the user has exactly one repository", () => {
+  const html = projectsPage(user, [], [{ full_name: "a/b", private: 0, pushed_at: null }]);
+  assert.match(html, /1 repository from your GitHub account/);
+});

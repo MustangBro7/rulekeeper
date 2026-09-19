@@ -236,8 +236,16 @@ input[type=text], input[type=email], select {
   font-family: var(--mono); font-size: 13px;
 }
 input::placeholder { color: var(--muted); }
+/* Inputs share a baseline: each field contributes label+input only, so a hint
+   under one field can no longer push its input out of line with the others. */
 .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
 .row .field { flex: 1 1 220px; margin-bottom: 0; }
+.row .field-narrow { flex: 0 1 180px; }
+.row > .btn { flex: 0 0 auto; }
+.row .row-hint { flex: 1 0 100%; margin: 2px 0 0; }
+
+.form-add .hint a { color: var(--adhere); }
+input[list]::-webkit-calendar-picker-indicator { opacity: 0.45; cursor: pointer; }
 
 .notice { padding: 13px 16px; border-radius: 9px; font-size: 13.5px; margin-bottom: 20px; }
 .notice.ok { background: rgba(61, 220, 151, 0.1); border: 1px solid rgba(61, 220, 151, 0.3); color: var(--adhere); }

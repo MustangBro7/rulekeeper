@@ -9,6 +9,7 @@ import {
   destroySession,
   exchangeCode,
   fetchProfile,
+  fetchRepos,
   oauthState,
   projectFromToken,
   readCookie,
@@ -30,12 +31,14 @@ import {
   listProjects,
   listRuns,
   listTokens,
+  listUserRepos,
   latestRunBody,
   MAX_PROJECTS_PER_USER,
   previousFingerprints,
   normalizeSlug,
   recordRun,
   removeMute,
+  replaceUserRepos,
   revokeToken,
   touchToken,
 } from "./projects.ts";
@@ -235,7 +238,14 @@ app.get("/auth/github/callback", async (c) => {
   try {
     const accessToken = await exchangeCode(clientId, clientSecret, code, `${origin(c.req.raw)}/auth/github/callback`);
     const user = await upsertUser(c.env.DB, await fetchProfile(accessToken));
-    return redirect("/app", setSessionCookie(c.req.raw, await createSession(c.env.DB, user.id)));
+    const session = await createSession(c.env.DB, user.id);
+    // Cache the repo list while we still hold the token; the token itself is never stored.
+    try {
+      await replaceUserRepos(c.env.DB, user.id, await fetchRepos(accessToken));
+    } catch (error) {
+      console.error(JSON.stringify({ message: "repo cache failed", error: String(error) }));
+    }
+    return redirect("/app", setSessionCookie(c.req.raw, session));
   } catch (error) {
     console.error(JSON.stringify({ message: "oauth failed", error: String(error) }));
     return htmlResponse(loginPage("GitHub sign-in failed. Please try again."), 502);
@@ -267,9 +277,12 @@ app.use("/app/*", async (c, next) => {
 
 app.get("/app", async (c) => {
   const user = c.get("user");
-  const projects = await listProjects(c.env.DB, user.id);
+  const [projects, repos] = await Promise.all([
+    listProjects(c.env.DB, user.id),
+    listUserRepos(c.env.DB, user.id),
+  ]);
   return htmlResponse(
-    projectsPage(user, projects, c.req.query("ok") ?? undefined, c.req.query("err") ?? undefined),
+    projectsPage(user, projects, repos, c.req.query("ok") ?? undefined, c.req.query("err") ?? undefined),
   );
 });
 

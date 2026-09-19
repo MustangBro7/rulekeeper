@@ -280,6 +280,36 @@ export async function previousFingerprints(
   }
 }
 
+export interface CachedRepo {
+  full_name: string;
+  private: number;
+  pushed_at: string | null;
+}
+
+export async function replaceUserRepos(
+  db: D1Database,
+  userId: string,
+  repos: Array<{ full_name: string; private: boolean; pushed_at: string | null }>,
+): Promise<void> {
+  if (repos.length === 0) return;
+  const statements = [db.prepare("DELETE FROM user_repos WHERE user_id = ?").bind(userId)];
+  for (const repo of repos.slice(0, 500)) {
+    statements.push(
+      db.prepare("INSERT OR REPLACE INTO user_repos (user_id, full_name, private, pushed_at) VALUES (?, ?, ?, ?)")
+        .bind(userId, repo.full_name, repo.private ? 1 : 0, repo.pushed_at),
+    );
+  }
+  await db.batch(statements);
+}
+
+export async function listUserRepos(db: D1Database, userId: string): Promise<CachedRepo[]> {
+  const { results } = await db
+    .prepare("SELECT full_name, private, pushed_at FROM user_repos WHERE user_id = ? ORDER BY pushed_at DESC NULLS LAST, full_name")
+    .bind(userId)
+    .all<CachedRepo>();
+  return results ?? [];
+}
+
 export async function listMutes(db: D1Database, projectId: string): Promise<Mute[]> {
   const { results } = await db
     .prepare("SELECT id, fingerprint, code, file, subject, reason, created_at FROM mutes WHERE project_id = ? ORDER BY created_at DESC")

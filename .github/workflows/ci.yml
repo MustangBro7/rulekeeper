@@ -38,5 +38,6 @@ jobs:
       - name: Check our own instruction files against the code
         uses: ./
         with:
+          token: ${{ secrets.RULEKEEPER_TOKEN }}
           strict: "true"
           comment: "true"

@@ -26,7 +26,8 @@ export interface SharedRule {
 }
 
 export interface SharedReport {
-  v: 1;
+  v: 2;
+  kind: "adherence";
   generatedAt: string;
   window: { since: string; until: string };
   totals: {
@@ -49,8 +50,46 @@ export interface SharedReport {
   }>;
 }
 
+export type Severity = "error" | "warn" | "info";
+
+export interface DriftFinding {
+  code: string;
+  severity: Severity;
+  file: string;
+  line: number;
+  subject: string;
+  message: string;
+  context: string;
+  actual?: string;
+  suggestion?: string;
+}
+
+export interface DriftReport {
+  v: 2;
+  kind: "drift";
+  generatedAt: string;
+  totals: {
+    repos: number;
+    files: number;
+    claims: number;
+    verified: number;
+    errors: number;
+    warnings: number;
+    infos: number;
+  };
+  repos: Array<{
+    name: string;
+    score: number;
+    files: Array<{ name: string; tokensEstimate: number; claims: number; verified: number; findings: number; lastCommit: string }>;
+    findings: DriftFinding[];
+    verified: Record<string, number>;
+  }>;
+}
+
+export type AnyReport = SharedReport | DriftReport;
+
 export type ReportValidation =
-  | { ok: true; report: SharedReport; ruleCount: number }
+  | { ok: true; report: AnyReport; ruleCount: number }
   | { ok: false; errors: string[] };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -117,8 +156,61 @@ function isRepo(value: unknown): value is SharedReport["repos"][number] {
     && value.rules.every(isRule);
 }
 
+const SEVERITIES = new Set<Severity>(["error", "warn", "info"]);
+
+function isFinding(value: unknown): value is DriftFinding {
+  return isRecord(value)
+    && isString(value.code)
+    && value.code.length <= 40
+    && isString(value.severity)
+    && SEVERITIES.has(value.severity as Severity)
+    && isString(value.file)
+    && value.file.length <= 200
+    && isCount(value.line)
+    && isString(value.subject)
+    && value.subject.length <= 200
+    && isString(value.message)
+    && value.message.length <= 300
+    && isString(value.context)
+    && value.context.length <= 200
+    && (value.actual === undefined || (isString(value.actual) && value.actual.length <= 300))
+    && (value.suggestion === undefined || (isString(value.suggestion) && value.suggestion.length <= 300));
+}
+
+function isDriftFile(value: unknown): boolean {
+  return isRecord(value)
+    && isString(value.name)
+    && isCount(value.tokensEstimate)
+    && isCount(value.claims)
+    && isCount(value.verified)
+    && isCount(value.findings)
+    && isString(value.lastCommit);
+}
+
+function isDriftRepo(value: unknown): boolean {
+  return isRecord(value)
+    && isString(value.name)
+    && isCount(value.score)
+    && value.score <= 100
+    && Array.isArray(value.files)
+    && value.files.every(isDriftFile)
+    && Array.isArray(value.findings)
+    && value.findings.every(isFinding)
+    && isRecord(value.verified);
+}
+
+function hasDriftShape(value: unknown): value is DriftReport {
+  if (!isRecord(value) || value.v !== 2 || value.kind !== "drift" || !isString(value.generatedAt)) return false;
+  const totals = value.totals;
+  if (!isRecord(totals)) return false;
+  for (const key of ["repos", "files", "claims", "verified", "errors", "warnings", "infos"]) {
+    if (!isCount(totals[key])) return false;
+  }
+  return Array.isArray(value.repos) && value.repos.every(isDriftRepo);
+}
+
 function hasReportShape(value: unknown): value is SharedReport {
-  if (!isRecord(value) || value.v !== 1 || !isString(value.generatedAt)) return false;
+  if (!isRecord(value) || value.v !== 2 || value.kind !== "adherence" || !isString(value.generatedAt)) return false;
   if (!isRecord(value.window) || !isString(value.window.since) || !isString(value.window.until)) return false;
   if (!isRecord(value.totals)
     || !isCount(value.totals.sessions)
@@ -130,6 +222,9 @@ function hasReportShape(value: unknown): value is SharedReport {
     || !isCount(value.totals.sources.codex)) return false;
   return Array.isArray(value.repos) && value.repos.every(isRepo);
 }
+
+/** Leaf keys quoted from the user's own instruction files; command-shaped text is expected there. */
+const AUTHORED_TRAILS = ["quote", "context", "message", "suggestion", "actual", "subject", "evidence"];
 
 /** Mirrors the CLI's recursive redaction validator. */
 export function validateRedaction(value: unknown): string[] {
@@ -143,7 +238,7 @@ export function validateRedaction(value: unknown): string[] {
         || /(?:^|\s)\/(?:Users|home|Volumes|private|tmp|var)\//.test(current);
       if (isAbsolute) errors.push(`${trail}: absolute or home-relative path`);
       if (/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(current)) errors.push(`${trail}: email address`);
-      if (/^(?:cd\s+)?(?:npm|npx|pnpm|yarn|bun|cargo|git|go|python|wrangler)\s+\S+/i.test(current) && !trail.endsWith("quote")) {
+      if (/^(?:cd\s+)?(?:npm|npx|pnpm|yarn|bun|cargo|git|go|python|wrangler)\s+\S+/i.test(current) && !AUTHORED_TRAILS.some((key) => trail.endsWith(key))) {
         errors.push(`${trail}: command string`);
       }
       return;
@@ -163,9 +258,17 @@ export function validateRedaction(value: unknown): string[] {
 
 export function validateReport(value: unknown): ReportValidation {
   const errors = validateRedaction(value);
-  if (!hasReportShape(value)) errors.unshift("report: invalid RuleKeeper v1 schema");
-  if (errors.length > 0 || !hasReportShape(value)) return { ok: false, errors };
+  const drift = hasDriftShape(value);
+  const adherence = hasReportShape(value);
+  if (!drift && !adherence) errors.unshift("report: invalid RuleKeeper v2 schema");
+  if (errors.length > 0) return { ok: false, errors };
 
+  if (drift) {
+    const findingCount = value.repos.reduce((total, repo) => total + repo.findings.length, 0);
+    if (findingCount > MAX_REPORT_RULES) return { ok: false, errors: [`report: exceeds ${MAX_REPORT_RULES} findings`] };
+    return { ok: true, report: value, ruleCount: findingCount };
+  }
+  if (!adherence) return { ok: false, errors: ["report: invalid RuleKeeper v2 schema"] };
   const ruleCount = value.repos.reduce((total, repo) => total + repo.rules.length, 0);
   if (ruleCount > MAX_REPORT_RULES) return { ok: false, errors: [`report: exceeds ${MAX_REPORT_RULES} rules`] };
   return { ok: true, report: value, ruleCount };

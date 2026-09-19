@@ -3,177 +3,314 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RuleKeeper — Do your coding agents follow your rules?</title>
-  <meta name="description" content="RuleKeeper joins your CLAUDE.md / AGENTS.md with what Claude Code, Codex and Cursor actually did in your session transcripts — and scores every rule with receipts. Local-first. Your code never leaves the machine.">
-  <meta name="theme-color" content="#0b0f0e">
+  <title>RuleKeeper — Are your agent instructions still true?</title>
+  <meta name="description" content="RuleKeeper runs two checks on the files that steer your coding agents: drift tells you whether CLAUDE.md is still true about your repo, adherence tells you whether agents actually followed it. Local-first, zero dependencies.">
+  <meta name="theme-color" content="#07090a">
   <link rel="canonical" href="https://rulekeeper.dev/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rulekeeper.dev/">
   <meta property="og:site_name" content="RuleKeeper">
-  <meta property="og:title" content="RuleKeeper — Do your coding agents follow your rules?">
-  <meta property="og:description" content="RuleKeeper joins your CLAUDE.md / AGENTS.md with what Claude Code, Codex and Cursor actually did in your session transcripts — and scores every rule with receipts. Local-first. Your code never leaves the machine.">
+  <meta property="og:title" content="RuleKeeper — Are your agent instructions still true?">
+  <meta property="og:description" content="Two checks for the files that steer your coding agents: is CLAUDE.md still true about your repo, and did agents actually follow it?">
   <meta property="og:image" content="/og.png">
-  <meta property="og:image:alt" content="RuleKeeper evidence terminal">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="RuleKeeper — Do your coding agents follow your rules?">
-  <meta name="twitter:description" content="RuleKeeper joins your CLAUDE.md / AGENTS.md with what Claude Code, Codex and Cursor actually did in your session transcripts — and scores every rule with receipts. Local-first. Your code never leaves the machine.">
+  <meta name="twitter:title" content="RuleKeeper — Are your agent instructions still true?">
+  <meta name="twitter:description" content="Two checks for the files that steer your coding agents: is CLAUDE.md still true about your repo, and did agents actually follow it?">
   <meta name="twitter:image" content="/og.png">
-  <meta name="twitter:image:alt" content="RuleKeeper evidence terminal">
   <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"RuleKeeper","operatingSystem":"macOS/Linux","applicationCategory":"DeveloperApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"RuleKeeper","operatingSystem":"macOS, Linux, Windows","applicationCategory":"DeveloperApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
   </script>
   <script src="/main.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main-content">Skip to content</a>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <nav aria-label="Primary navigation">
+  <nav aria-label="Primary">
     <div class="wrap nav-in">
-      <a class="logo" href="#main-content" aria-label="RuleKeeper home"><b aria-hidden="true">▚</b> rulekeeper</a>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links">
-        <span class="menu-label">menu</span><span aria-hidden="true"> ≡</span>
-      </button>
+      <a class="logo" href="#main"><b aria-hidden="true">▚</b> rulekeeper</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links">menu ≡</button>
       <div class="nav-links" id="nav-links">
-        <a href="#how">how it works</a>
-        <a href="#proof">proof</a>
-        <a href="#pricing">pricing</a>
-        <a href="https://github.com/MustangBro7/rulekeeper" rel="noopener">github <span aria-hidden="true">↗</span></a>
-        <a class="btn nav-cta" href="#install">install the CLI</a>
+        <a href="#drift">drift</a>
+        <a href="#adherence">adherence</a>
+        <a href="#privacy">privacy</a>
+        <a href="#ci">ci</a>
+        <a href="https://github.com/MustangBro7/rulekeeper" rel="noopener">github ↗</a>
+        <a class="btn nav-cta" href="#install">Install</a>
       </div>
     </div>
   </nav>
 
-  <main id="main-content">
-    <header class="hero wrap">
-      <div>
-        <p class="kicker">context health for coding agents</p>
-        <h1>Your agents never read your rules.<br><span class="dim">Now you can prove it.</span></h1>
-        <p class="sub">RuleKeeper joins your CLAUDE.md / AGENTS.md with what Claude Code, Codex and Cursor actually did in your session transcripts — and scores every rule with receipts. Local-first. Your code never leaves the machine.</p>
-        <div class="install" id="install">
-          <code>$ npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz</code>
-          <button class="copy" type="button" data-copy-command="npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz">[copy]</button>
-        </div>
-        <p class="install-then">then <code>rulekeeper demo</code> · <code>rulekeeper scan</code></p>
-        <p class="copy-status sr-only" aria-live="polite"></p>
-        <p class="hero-note">free · installs straight from the GitHub release — no npm account, no registry, zero dependencies</p>
-      </div>
+  <main id="main">
 
-      <div class="term" role="region" aria-label="Terminal output of rulekeeper scan showing rule adherence findings">
-        <div class="term-bar" aria-hidden="true">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="term-title">rulekeeper scan — 4-week backtest</span>
+    <!-- ── Hero ─────────────────────────────────────────── -->
+    <header class="hero wrap">
+      <p class="kicker">context integrity for coding agents <i aria-hidden="true"></i></p>
+      <h1>Your agent instructions are <span class="grad">quietly lying</span> to you.</h1>
+      <p class="sub">
+        <code>CLAUDE.md</code> and <code>AGENTS.md</code> rot like any other code — except nothing
+        compiles them, nothing tests them, and nobody notices. RuleKeeper runs the two checks
+        that catch it: is the file still <em>true</em>, and did agents actually <em>follow</em> it?
+      </p>
+
+      <div class="hero-cta">
+        <div class="install" id="install">
+          <code><em>$</em> npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz</code>
+          <button class="copy" type="button" data-copy="npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz">copy</button>
         </div>
-        <div class="term-body">
-          <span class="rule-line p">$ rulekeeper scan --since 4w</span>
-          <span class="rule-line w">▚ 59 sessions · 3,095 commands · 1,367 edits · 5 repos</span>
-          <span class="rule-line separator" aria-hidden="true">──────────────────────────────────────────────</span>
-          <span class="rule-line"><span class="r">✗ DELIVERY</span><span class="w">  AGENTS.md reached the agent in </span><span class="r">40%</span><span class="w"> of sessions</span></span>
-          <span class="rule-line"><span class="g">✓ WORKS</span><span class="w">    “verify in preview before done” — </span><span class="g">12/12</span><span class="w"> when in context</span></span>
-          <span class="rule-line"><span class="y">△ DEAD</span><span class="w">     “run standard checks” — followed 9/9 </span><span class="y">before the rule existed</span></span>
-          <span class="rule-line"><span class="r">✗ VIOLATION</span><span class="w"> wrangler.jsonc edited 10× · cf-typegen never ran</span></span>
-          <span class="rule-line p">           └ receipt: session 5e277bbf · jul 11 · 102 edits</span>
-          <span class="rule-line separator" aria-hidden="true">──────────────────────────────────────────────</span>
-          <span class="rule-line w">8 of 23 rules never exercised in 4 weeks. <span class="cursor" aria-hidden="true"></span></span>
-        </div>
+        <a class="btn btn-ghost" href="#drift">See what it catches</a>
+      </div>
+      <p class="hero-note">free &amp; MIT · zero runtime dependencies · nothing leaves your machine</p>
+      <p class="copy-status sr-only" aria-live="polite"></p>
+
+      <div class="split">
+        <article class="check check--drift reveal">
+          <span class="num">01 · static</span>
+          <h2>Is the map still accurate?</h2>
+          <p>
+            Reads every claim your instruction file makes about the repo — paths, scripts, targets,
+            dependencies, env vars, package manager — and checks each one against the code that
+            exists right now.
+          </p>
+          <span class="cmd">rulekeeper drift</span>
+        </article>
+        <article class="check check--adhere reveal">
+          <span class="num">02 · behavioral</span>
+          <h2>Did anyone follow the map?</h2>
+          <p>
+            Replays your local Claude Code and Codex transcripts to score each rule: was it even
+            delivered into context, did agents obey it, and is it doing anything your agents
+            weren't already doing?
+          </p>
+          <span class="cmd">rulekeeper adherence</span>
+        </article>
       </div>
     </header>
 
-    <section class="stats" id="proof" aria-label="Validated findings">
+    <!-- ── Stats ────────────────────────────────────────── -->
+    <section class="stats" aria-label="Findings from a four-week backtest" style="padding:0">
       <div class="wrap stats-in">
-        <div class="stat"><p class="v"><em>60%</em></p><p class="k">of sessions never saw the rules at all</p></div>
-        <div class="stat"><p class="v">78→<em>93%</em></p><p class="k">adherence after one measured rule was added</p></div>
-        <div class="stat"><p class="v"><em>12/12</em></p><p class="k">rule followed when actually delivered</p></div>
-        <div class="stat"><p class="v"><em>8/23</em></p><p class="k">rules never exercised — dead weight</p></div>
+        <div class="stat"><p class="v"><em>60%</em></p><p class="k">of sessions never received the instruction file at all</p></div>
+        <div class="stat"><p class="v">78→<em>93%</em></p><p class="k">adherence after one measured rule was rewritten</p></div>
+        <div class="stat"><p class="v"><em>8/23</em></p><p class="k">rules never exercised — pure context tax</p></div>
+        <div class="stat"><p class="v"><em>59</em></p><p class="k">real sessions in the validating backtest</p></div>
       </div>
     </section>
 
-    <section class="features wrap" id="how">
-      <p class="sec-kicker">three questions, answered from your own logs</p>
-      <h2>Static linters check your files. RuleKeeper checks your agents.</h2>
-      <div class="grid3">
-        <article class="card">
-          <span class="tag">01 · DELIVERY</span>
-          <h3>Did the rule even reach the agent?</h3>
-          <p>Most instruction files silently never make it into context — wrong directory, wrong filename, wrong tool. RuleKeeper detects per-session whether your rules were actually delivered.</p>
-        </article>
-        <article class="card">
-          <span class="tag">02 · EFFECTIVENESS</span>
-          <h3>Did the rule change behavior?</h3>
-          <p>Every rule gets a before/after and an in-context vs not split, dated by the git commit that introduced it. Keep what works. Delete what agents already do by default.</p>
-        </article>
-        <article class="card">
-          <span class="tag">03 · RECEIPTS</span>
-          <h3>Which sessions broke it?</h3>
-          <p>Every violation links to the exact session, timestamp and edit. No vibes — transcript evidence you can open and read.</p>
-        </article>
-      </div>
-    </section>
+    <!-- ── Drift ────────────────────────────────────────── -->
+    <section class="product product--drift" id="drift">
+      <div class="wrap">
+        <p class="sec-kicker">01 — rulekeeper drift</p>
+        <h2 class="sec">A doc that describes a repo that no longer exists.</h2>
+        <p class="sec-sub">
+          You renamed a script six weeks ago. Your <code>CLAUDE.md</code> still tells every agent to run
+          the old one. They try, it fails, they improvise — and you pay for the detour in tokens and
+          wrong turns. Drift is a static check: no logs, no network, safe in CI.
+        </p>
 
-    <section class="receipt-sec wrap" aria-label="Example violation receipt">
-      <div class="receipt">
-        <div>
-          <p class="q w">“<span class="r">wrangler.jsonc</span> was edited <b>10 times</b> across two repos. <span class="r">cf-typegen</span> — required by the CLAUDE.md that was in context — <b>never ran</b>.”</p>
-          <p class="meta">receipt · session 5e277bbf · 2026-07-11 · 102 edits · hand-verifiable in your own transcript</p>
-        </div>
-        <div class="stamp" aria-label="Rule broken">RULE BROKEN</div>
-      </div>
-    </section>
+        <div class="product-grid">
+          <ul class="checklist reveal">
+            <li><b>Dead paths.</b> Files and directories the doc points at that aren't there anymore — including the ones buried in ASCII tree diagrams.</li>
+            <li><b>Phantom scripts.</b> <code>npm run typecheck</code> in the doc, no <code>typecheck</code> in package.json. Suggests the closest real script.</li>
+            <li><b>Missing targets.</b> Make targets, just recipes and cargo aliases that no longer resolve.</li>
+            <li><b>Stale examples.</b> A code sample importing a package you removed from your dependencies.</li>
+            <li><b>Wrong package manager.</b> The doc says pnpm; the lockfile says npm.</li>
+            <li><b>Contradictions.</b> Root <code>CLAUDE.md</code> and nested <code>AGENTS.md</code> telling agents opposite things.</li>
+            <li><b>Undocumented territory.</b> Source directories no instruction file has ever mentioned.</li>
+          </ul>
 
-    <section class="pricing wrap" id="pricing">
-      <p class="sec-kicker">pricing</p>
-      <h2>Free where it counts. Paid where it compounds.</h2>
-      <div class="tiers">
-        <article class="tier">
-          <h3 class="name">CLI</h3>
-          <p class="price">$0</p>
-          <p class="per">forever · local-only</p>
-          <ul><li>full scan + report</li><li>every rule scored</li><li>receipts included</li></ul>
-          <a class="btn ghost" href="#install">install the CLI</a>
-        </article>
-        <article class="tier hot">
-          <h3 class="name">Indie</h3>
-          <p class="price">$5</p>
-          <p class="per">/month</p>
-          <ul><li>fleet drift across repos</li><li>weekly trend history</li><li>hygiene PRs</li></ul>
-          <a class="btn" href="#waitlist">start free</a>
-        </article>
-        <article class="tier">
-          <h3 class="name">Team</h3>
-          <p class="price">$29</p>
-          <p class="per">/month · 10–100 repos</p>
-          <ul><li>template conformance</li><li>org findings history</li><li>GitHub App + CI</li></ul>
-          <a class="btn ghost" href="#waitlist">talk to us</a>
-        </article>
-      </div>
-    </section>
-
-    <section class="waitlist wrap" id="waitlist">
-      <div class="waitlist-panel">
-        <div>
-          <h2>Get the launch report</h2>
-          <p class="waitlist-sub">One email when the CLI ships — with the full 4-week backtest attached.</p>
-        </div>
-        <form class="waitlist-form" data-waitlist-endpoint="/api/waitlist">
-          <label for="email">Email address</label>
-          <div class="form-row">
-            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
-            <button class="btn" type="submit">join waitlist</button>
+          <div class="term reveal" role="img" aria-label="Terminal output: rulekeeper drift finds a missing file, a missing script, a package manager mismatch and an undeclared dependency, scoring the repository 55 out of 100.">
+            <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="term-title">rulekeeper drift</span></div>
+            <code class="term-body">
+<span class="line g b">▚ rulekeeper drift</span>
+<span class="line"><span class="b">acme-dashboard</span><span class="w"> — 11 claims in CLAUDE.md</span></span>
+<span class="line d">──────────────────────────────────────────</span>
+<span class="line"><span class="r">✗ ERROR</span><span class="d">  CLAUDE.md:13  </span><span class="b">src/handlers.ts</span></span>
+<span class="line w">         src/handlers.ts does not exist</span>
+<span class="line p">         → did you mean src/index.ts?</span>
+<span class="line d">         doc:  handlers.ts # request handlers</span>
+<span class="line"> </span>
+<span class="line"><span class="r">✗ ERROR</span><span class="d">  CLAUDE.md:19  </span><span class="b">typecheck</span></span>
+<span class="line w">         no package.json script named "typecheck"</span>
+<span class="line d">         repo: available: dev, check, test, deploy</span>
+<span class="line p">         → did you mean "check"?</span>
+<span class="line"> </span>
+<span class="line"><span class="y">⚠ WARN </span><span class="d">  CLAUDE.md:5   </span><span class="b">pnpm</span></span>
+<span class="line w">         doc says pnpm, repo has an npm lockfile</span>
+<span class="line"> </span>
+<span class="line"><span class="y">⚠ WARN </span><span class="d">  CLAUDE.md:27  </span><span class="b">zod</span></span>
+<span class="line w">         imported in an example, not a dependency</span>
+<span class="line d">──────────────────────────────────────────</span>
+<span class="line w">6/11 claims still true · 2 errors · 3 warnings</span>
+<span class="line"><span class="b">truth score</span> <span class="r b">55</span><span class="d">/100</span> <span class="cursor" aria-hidden="true"></span></span>
+            </code>
           </div>
-          <p class="form-status" aria-live="polite"></p>
-        </form>
+        </div>
       </div>
     </section>
+
+    <!-- ── Adherence ────────────────────────────────────── -->
+    <section class="product product--adhere" id="adherence">
+      <div class="wrap">
+        <p class="sec-kicker">02 — rulekeeper adherence</p>
+        <h2 class="sec">A true doc that nobody ever read.</h2>
+        <p class="sec-sub">
+          Drift proves the file is correct. It does not prove the file <em>works</em>. Adherence joins your
+          rules with what Claude Code and Codex actually did — every command, every edit — and scores
+          each rule with a session receipt you can open and read.
+        </p>
+
+        <div class="product-grid">
+          <ul class="checklist reveal">
+            <li><b>Delivery.</b> Per session, did the instruction file reach the model's context at all? Most teams discover it usually didn't.</li>
+            <li><b>Adherence.</b> Of the sessions that received a rule and could have obeyed it, how many did?</li>
+            <li><b>Dead weight.</b> Rules followed just as reliably when they were <em>not</em> in context — your agents already did this. Delete the line, reclaim the tokens.</li>
+            <li><b>Receipts.</b> Every violation carries a session id, a date and the concrete evidence.</li>
+            <li><b>Rule birthdays.</b> Rules are dated from the git commit that introduced them, so sessions predating a rule are never counted against it.</li>
+          </ul>
+
+          <div class="term reveal" role="img" aria-label="Terminal output: rulekeeper adherence shows a delivery gap where only one of two sessions received CLAUDE.md, a broken check rule, and two rules that work.">
+            <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="term-title">rulekeeper adherence --since 4w</span></div>
+            <code class="term-body">
+<span class="line g b">▚ rulekeeper adherence</span>
+<span class="line w">59 sessions · 3,095 commands · 1,367 edits</span>
+<span class="line d">──────────────────────────────────────────</span>
+<span class="line b">acme-dashboard</span>
+<span class="line"><span class="r">✗ DELIVERY GAP</span><span class="w"> "CLAUDE.md in context"</span></span>
+<span class="line w">   reached the agent in <span class="r">24/59</span> sessions</span>
+<span class="line p">   └ receipt: session 5e277bbf · jul 11</span>
+<span class="line"> </span>
+<span class="line"><span class="r">✗ BROKEN</span><span class="w">  `run checks: npm run check`</span></span>
+<span class="line w">   required after code edits, ran <span class="r">7/19</span></span>
+<span class="line p">   └ receipt: session 91a4c0de · jul 14</span>
+<span class="line"> </span>
+<span class="line"><span class="g">✓ WORKS</span><span class="w">   "verify in preview before done"</span></span>
+<span class="line w">   followed <span class="g">12/12</span> when in context</span>
+<span class="line"> </span>
+<span class="line"><span class="y">△ DEAD-WEIGHT</span><span class="w"> "use npm as the manager"</span></span>
+<span class="line w">   followed 9/9 — including without context</span>
+<span class="line d">──────────────────────────────────────────</span>
+<span class="line w">8 of 23 tested rules were dead weight. <span class="cursor" aria-hidden="true"></span></span>
+            </code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── What it catches ──────────────────────────────── -->
+    <section class="wrap" id="catches">
+      <p class="sec-kicker">the taxonomy</p>
+      <h2 class="sec">Nine ways a steering file goes wrong.</h2>
+      <p class="sec-sub">Each finding carries a severity, the exact line, what the repo actually looks like, and a fix when one is mechanically derivable.</p>
+
+      <div class="findings reveal">
+        <div class="finding"><span class="sev e">ERROR</span><div><h4>missing-path</h4><p>The doc references <code>src/handlers.ts</code>. The repository has no such file.</p></div></div>
+        <div class="finding"><span class="sev e">ERROR</span><div><h4>missing-script</h4><p><code>npm run typecheck</code> is documented; package.json defines <code>check</code>.</p></div></div>
+        <div class="finding"><span class="sev e">ERROR</span><div><h4>missing-target</h4><p><code>make deploy</code> is documented; the Makefile has no such target.</p></div></div>
+        <div class="finding"><span class="sev w">WARN</span><div><h4>missing-dependency</h4><p>An example imports <code>zod</code>, which is not in any package.json.</p></div></div>
+        <div class="finding"><span class="sev w">WARN</span><div><h4>unknown-env-var</h4><p><code>DATABASE_URL</code> is documented but never read by the code or declared in env files.</p></div></div>
+        <div class="finding"><span class="sev w">WARN</span><div><h4>package-manager-mismatch</h4><p>The doc mandates pnpm; the repo carries a package-lock.json.</p></div></div>
+        <div class="finding"><span class="sev w">WARN</span><div><h4>contradiction</h4><p>Two instruction files give agents conflicting instructions on the same subject.</p></div></div>
+        <div class="finding"><span class="sev i">NOTE</span><div><h4>stale-section</h4><p>A directory the doc describes has changed in 40 commits since the doc was last touched.</p></div></div>
+        <div class="finding"><span class="sev i">NOTE</span><div><h4>undocumented-area</h4><p>A source directory that no instruction file has ever mentioned.</p></div></div>
+      </div>
+    </section>
+
+    <!-- ── CI ───────────────────────────────────────────── -->
+    <section class="product product--drift" id="ci">
+      <div class="wrap ci-grid">
+        <div>
+          <p class="sec-kicker">continuous integrity</p>
+          <h2 class="sec">Fail the build when the doc stops being true.</h2>
+          <p class="sec-sub">
+            <code>drift</code> reads no transcripts and makes no network calls, so it belongs in CI
+            next to your linter. It exits non-zero on errors — add <code>--strict</code> to fail on
+            warnings too.
+          </p>
+          <a class="btn btn-ghost" href="https://github.com/MustangBro7/rulekeeper" rel="noopener">Read the docs ↗</a>
+        </div>
+        <pre class="code reveal"><span class="c"># .github/workflows/rulekeeper.yml</span>
+<span class="k">name</span>: agent-instructions
+<span class="k">on</span>: [<span class="s">push</span>, <span class="s">pull_request</span>]
+
+<span class="k">jobs</span>:
+  <span class="k">drift</span>:
+    <span class="k">runs-on</span>: ubuntu-latest
+    <span class="k">steps</span>:
+      - <span class="k">uses</span>: actions/checkout@v4
+        <span class="k">with</span>: { <span class="k">fetch-depth</span>: 0 }
+      - <span class="k">uses</span>: actions/setup-node@v4
+        <span class="k">with</span>: { <span class="k">node-version</span>: 20 }
+      - <span class="k">run</span>: npm i -g <span class="s">rulekeeper-cli.tgz</span>
+      - <span class="k">run</span>: rulekeeper drift <span class="c">--strict</span></pre>
+      </div>
+    </section>
+
+    <!-- ── Privacy ──────────────────────────────────────── -->
+    <section class="wrap" id="privacy">
+      <p class="sec-kicker">local by construction</p>
+      <h2 class="sec">Your code never leaves the machine.</h2>
+      <p class="sec-sub">Both checks run entirely locally. The only network call the CLI can make is an explicit <code>rulekeeper share</code>, and it refuses to send anything that fails its own redaction audit.</p>
+
+      <div class="privacy-grid reveal">
+        <div class="pcard">
+          <span class="icon" aria-hidden="true">⌂</span>
+          <h3>No telemetry, ever</h3>
+          <p>Zero runtime dependencies and no background calls. Read the source — it's a few thousand lines of plain TypeScript.</p>
+        </div>
+        <div class="pcard">
+          <span class="icon" aria-hidden="true">⊘</span>
+          <h3>Redaction is enforced</h3>
+          <p>Reports carry repo-relative paths, counts and quotes from your own docs. Absolute paths, file contents and emails are rejected by an assertion, not a policy.</p>
+        </div>
+        <div class="pcard">
+          <span class="icon" aria-hidden="true">↗</span>
+          <h3>Sharing is opt-in</h3>
+          <p>Share prints the exact payload, waits for a yes, and hands back a delete secret. Links expire in 30 days.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Final CTA ────────────────────────────────────── -->
+    <section class="wrap final" id="start">
+      <h2>Find out what your agents are actually reading.</h2>
+      <p class="sub">Two commands. Thirty seconds. No account.</p>
+
+      <div class="hero-cta">
+        <div class="install">
+          <code><em>$</em> rulekeeper demo drift</code>
+          <button class="copy" type="button" data-copy="rulekeeper demo drift">copy</button>
+        </div>
+        <div class="install">
+          <code><em>$</em> rulekeeper drift</code>
+          <button class="copy" type="button" data-copy="rulekeeper drift">copy</button>
+        </div>
+      </div>
+
+      <form class="waitlist" data-waitlist-endpoint="/api/waitlist">
+        <label class="sr-only" for="email">Email address</label>
+        <input id="email" name="email" type="email" required placeholder="you@company.com" autocomplete="email">
+        <button type="submit">Get the hosted dashboard</button>
+      </form>
+      <p class="waitlist-note">team dashboards &amp; trend history — in development. the CLI stays free.</p>
+      <p class="waitlist-status" role="status" aria-live="polite"></p>
+    </section>
+
   </main>
 
   <footer>
-    <div class="wrap">
-      <span><span aria-hidden="true">▚</span> rulekeeper</span>
-      <span class="right">local-first · MIT CLI · © 2026</span>
+    <div class="wrap foot-in">
+      <span>▚ rulekeeper — evidence, not vibes</span>
+      <div class="foot-links">
+        <a href="#drift">drift</a>
+        <a href="#adherence">adherence</a>
+        <a href="#privacy">privacy</a>
+        <a href="https://github.com/MustangBro7/rulekeeper" rel="noopener">github ↗</a>
+      </div>
     </div>
   </footer>
 </body>

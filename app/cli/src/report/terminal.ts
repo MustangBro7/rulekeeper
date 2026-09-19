@@ -24,7 +24,7 @@ function line(rule: ScoredRule, color: boolean): string {
 export function renderTerminal(report: Report, color = true): string {
   const repos = report.repos.filter(repo => Math.max(0, ...repo.files.map(file => file.sessionsTouching)) >= 2);
   const rules = repos.flatMap(repo => repo.rules); const output = [
-    paint(color, "32;1", "▚ rulekeeper"),
+    paint(color, "32;1", "▚ rulekeeper adherence"),
     `${report.totals.sessions} sessions · ${report.totals.commands} commands · ${report.totals.edits} edits · ${repos.length} repos`,
     "────────────────────────────────────────────────────────"
   ];

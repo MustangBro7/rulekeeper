@@ -91,7 +91,7 @@ export function scoreRule(rule: ExtractedRule, repo: RepoContext, birthProvider:
 
 export function buildReport(repos: RepoContext[], sessions: Session[], since: string, until: string, birthProvider: BirthProvider = gitBirthDate): Report {
   return {
-    v: 1, generatedAt: new Date().toISOString(), window: { since, until },
+    v: 2, kind: "adherence", generatedAt: new Date().toISOString(), window: { since, until },
     totals: { sessions: sessions.length, commands: sessions.reduce((n, s) => n + s.commands.length, 0), edits: sessions.reduce((n, s) => n + s.edits.length, 0), errors: sessions.reduce((n, s) => n + s.errors, 0), sources: { claude: sessions.filter(s => s.source === "claude").length, codex: sessions.filter(s => s.source === "codex").length } },
     repos: repos.map(repo => ({ name: repo.name, files: repo.files.map(file => ({ name: file.name, tokensEstimate: file.tokensEstimate, sessionsTouching: repo.sessions.length, sessionsInContext: repo.sessions.filter(session => file.markers.some(marker => session.rawText.includes(marker))).length })), rules: (awaitRules(repo)).map(rule => scoreRule(rule, repo, birthProvider)) }))
   };

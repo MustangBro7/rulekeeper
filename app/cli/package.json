@@ -1,16 +1,39 @@
 {
   "name": "rulekeeper-cli",
-  "version": "1.0.0",
-  "description": "Does your CLAUDE.md actually work? Audits coding-agent instruction files against real session transcripts.",
+  "version": "2.0.0",
+  "description": "Two checks for the files that steer your coding agents: is CLAUDE.md still true about your repo, and did agents actually follow it?",
   "type": "module",
-  "bin": { "rulekeeper": "dist/cli.js" },
-  "files": ["dist", "demo-fixtures", "README.md"],
-  "engines": { "node": ">=18" },
+  "bin": {
+    "rulekeeper": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "demo-fixtures",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "license": "MIT",
-  "keywords": ["claude-code", "codex", "agents-md", "claude-md", "ai-agents", "context-engineering", "cli"],
-  "repository": { "type": "git", "url": "git+https://github.com/MustangBro7/rulekeeper.git" },
+  "keywords": [
+    "claude-code",
+    "codex",
+    "agents-md",
+    "claude-md",
+    "ai-agents",
+    "context-engineering",
+    "documentation-drift",
+    "linter",
+    "cli"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MustangBro7/rulekeeper.git"
+  },
   "homepage": "https://rulekeeper.abhinavmohan12.workers.dev",
-  "bugs": { "url": "https://github.com/MustangBro7/rulekeeper/issues" },
+  "bugs": {
+    "url": "https://github.com/MustangBro7/rulekeeper/issues"
+  },
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.0.0",

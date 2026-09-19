@@ -24,3 +24,11 @@ export function dateOnly(ts: string): string { return ts.slice(0, 10); }
 export function sessionInWindow(ts: string, since: string, until: string): boolean {
   const day = dateOnly(ts); return Boolean(day && day >= since.slice(0, 10) && day <= until.slice(0, 10));
 }
+
+/** Replaces absolute/home paths in user-authored text so quoted doc lines stay shareable. */
+export function redactAbsolute(value: string): string {
+  return value
+    .replace(/(?:^|(?<=\s))~?\/(?:Users|home|Volumes|private|tmp|var)\/[^\s"'`)]*/g, "\u2039path\u203a")
+    .replace(/(?:^|(?<=\s))~\/[^\s"'`)]*/g, "\u2039path\u203a")
+    .replace(/\b[A-Za-z]:[\\/][^\s"'`)]*/g, "\u2039path\u203a");
+}

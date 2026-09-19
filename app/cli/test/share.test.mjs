@@ -25,7 +25,8 @@ function rule(id, verdict = "works", evidenceSize = 0, receiptCount = 1) {
 
 function report(repos) {
   return {
-    v: 1,
+    v: 2,
+    kind: "adherence",
     generatedAt: "2026-07-19T00:00:00Z",
     window: { since: "2026-06-22", until: "2026-07-19" },
     totals: { sessions: 1, commands: 1, edits: 1, errors: 0, sources: { claude: 1, codex: 0 } },

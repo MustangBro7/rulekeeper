@@ -1,52 +1,135 @@
-# rulekeeper miner (weekend-1 proof)
+# ▚ rulekeeper
 
-Joins instruction files (CLAUDE.md / AGENTS.md) with agent session behavior
-mined from local Claude Code + Codex logs. See `../RULEKEEPER_PROOF.md` for
-the 4-week backtest results.
+**Are your agent instructions still true — and did agents ever follow them?**
 
-## Run
+`CLAUDE.md` and `AGENTS.md` rot like any other code, except nothing compiles them, nothing tests
+them, and nobody notices. RuleKeeper runs the two checks that catch it.
 
 ```bash
-python3 mine.py                                   # trailing 28 days
-python3 mine.py --since 2026-06-22 --until 2026-07-19
+npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz
+
+rulekeeper demo drift        # see it work on a bundled fixture
+rulekeeper drift             # check this repo's instruction files against the code
+rulekeeper adherence         # check whether agents followed them
 ```
 
-Stdlib only, no deps. Reads `~/.claude/projects/**.jsonl` (incl. subagent
-transcripts) and `~/.codex/sessions/**/rollout-*.jsonl`. Nothing leaves the
-machine.
+---
 
-## Outputs (`out/`)
+## 1 · `rulekeeper drift` — is the map still accurate?
 
-- `report.md` — scoreboard, violations with session receipts, weekly trend,
-  in-context vs not cross-tab
-- `evidence.json` — per-rule session ID lists (for pulling raw receipts)
-- `sessions.csv` — one row per session: scopes touched, commands/edits/errors,
-  which instruction files were in context, token usage
+A **static** check. Reads every claim your instruction files make about the repository and
+verifies each one against the code that exists right now. No session logs, no network, safe in CI.
+Exits non-zero when it finds errors.
 
-## Weekly cadence
+| Code | Severity | What it means |
+|---|---|---|
+| `missing-path` | error | A file or directory the doc points at does not exist — including entries inside ASCII tree diagrams. |
+| `missing-script` | error | `npm run typecheck` is documented but package.json has no `typecheck` script. Suggests the closest real one. |
+| `missing-target` | error | A Make target, just recipe or cargo alias that no longer resolves. |
+| `missing-dependency` | warn | A code example imports a package that is not in any package.json. |
+| `unknown-env-var` | warn | A documented environment variable that no code reads and no env file declares. |
+| `package-manager-mismatch` | warn | The doc mandates pnpm; the repo carries a package-lock.json. |
+| `contradiction` | warn | Two instruction files give agents conflicting instructions. |
+| `stale-section` | info | A directory the doc describes has moved on by many commits since the doc was last edited. |
+| `undocumented-area` | info | A source directory no instruction file has ever mentioned. |
 
-Weeks are anchored to `--until`, so re-running every Sunday extends the trend
-series. Rule birth dates come from git (pickaxe for rules whose file predates
-the rule text), so sessions older than a rule are reported separately, never
-as violations.
+```
+rulekeeper drift [--dir <repo>] [--strict] [--no-history] [--json <path>] [--md <path>]
+```
 
-## Extending
+`--strict` also fails on warnings. `--no-history` skips the git-history checks.
 
-- New repo: add an entry to `SCOPES` (roots, name tokens, instruction files)
-  and a marker substring to `INSTRUCTION_MARKERS`.
-- New rule: add a block in `eval_rules()` — applicability predicate +
-  followed/violated detector over `commands` / `edits` / `reads`.
+### In CI
 
-## Parser notes (hard-won)
+```yaml
+name: agent-instructions
+on: [push, pull_request]
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz
+      - run: rulekeeper drift --strict
+```
 
-- Codex logs shell commands three ways: `function_call` `exec_command`
-  (JSON args), `custom_tool_call` JS with `cmd:"..."`, and the same with
-  JSON-quoted keys `{"cmd":...}` — all handled, workdir extracted for scope
-  attribution.
-- Codex edits arrive as `apply_patch` custom_tool_calls; some rollouts embed
-  the patch with escaped `\n`. Only **added** lines are scored against
-  content rules (context/removed lines caused false violations).
-- Claude Edit/Write inputs give exact written content; `is_error` on
-  tool_results gives per-command failure.
-- Instruction-in-context detection = distinctive marker substring present in
-  the raw transcript (injection or agent read — both count as delivered).
+---
+
+## 2 · `rulekeeper adherence` — did anyone follow the map?
+
+A **behavioral** check. Joins your rules with what Claude Code and Codex actually did, mined from
+local session transcripts (`~/.claude/projects/**.jsonl`, `~/.codex/sessions/**/rollout-*.jsonl`).
+
+Each rule gets one of five verdicts:
+
+- **works** — applicable, delivered, and followed.
+- **broken** — applicable and violated, with a session receipt.
+- **not-delivered** — the instruction file never reached the model's context.
+- **dead-weight** — followed just as reliably when the rule was *not* in context. Your agents
+  already did this; delete the line and reclaim the tokens.
+- **untested** — never exercised in the window.
+
+Rules are dated from the git commit that introduced them, so sessions that predate a rule are
+reported separately and never counted as violations.
+
+```
+rulekeeper adherence [--since 28d|<date>] [--until <date>] [--dir <repo>] [--json <path>] [--md <path>]
+```
+
+Custom rules live in `.rulekeeper.json` at the repository root:
+
+```json
+{
+  "rules": [
+    { "id": "typegen-after-config",
+      "description": "Regenerate types after editing wrangler config",
+      "appliesTo": { "editsMatching": "wrangler\\.jsonc$" },
+      "requireCommand": "cf-typegen" },
+    { "id": "no-eval",
+      "description": "Never use eval in worker modules",
+      "inEditsMatching": "worker\\.ts$",
+      "forbidContent": "eval\\(" }
+  ]
+}
+```
+
+---
+
+## Privacy
+
+Both checks run entirely on your machine. The CLI has **zero runtime dependencies** and makes no
+network call except an explicit `rulekeeper share`.
+
+Reports carry repository-relative paths, counts, and quotes from your own instruction files —
+never absolute paths, file contents, command output, emails or usernames. This is enforced by an
+assertion in the CLI (`assertRedacted`) and independently re-validated by the worker before a
+shared report is stored.
+
+```
+rulekeeper share [reportPath] [--yes] [--dry-run]
+rulekeeper share --delete <id> --secret <secret>
+```
+
+`share` prints exactly what will be uploaded and waits for confirmation. Links expire after 30 days
+and come with a delete secret. `--dry-run` prints the full payload and exits.
+
+---
+
+## Development
+
+```bash
+cd app
+npm run verify      # typecheck + test + build
+npm run deploy      # wrangler deploy
+```
+
+- `app/cli` — the CLI (TypeScript, Node ≥ 18, zero runtime dependencies)
+- `app/worker` — Cloudflare Worker (Hono + D1) serving the landing page and share links
+
+See [CLAUDE.md](CLAUDE.md) for the agent playbook, and [DEPLOY.md](DEPLOY.md) for the release
+runbook.
+
+MIT.

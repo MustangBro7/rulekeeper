@@ -2,16 +2,35 @@ import { readFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { assertRedacted } from "./report/json.js";
-import type { Report, SharePayload, Verdict } from "./types.js";
+import type { DriftReport, Report, SharePayload, Verdict } from "./types.js";
 
 const WORKER_URL = "https://rulekeeper.abhinavmohan12.workers.dev";
 const MAX_SHARE_BYTES = 60_000;
 export interface ShareOptions { yes?: boolean; dryRun?: boolean; workerUrl?: string }
 
-function readReport(path: string): Report {
-  const raw = readFileSync(path, "utf8"); const parsed: unknown = JSON.parse(raw);
-  if (parsed === null || typeof parsed !== "object" || (parsed as { v?: unknown }).v !== 1) throw new Error("Expected a RuleKeeper v1 report");
-  return parsed as Report;
+function readReport(path: string): Report | DriftReport {
+  const raw = readFileSync(path, "utf8");
+  const parsed: unknown = JSON.parse(raw);
+  const kind = (parsed as { kind?: unknown } | null)?.kind;
+  if (parsed === null || typeof parsed !== "object" || (parsed as { v?: unknown }).v !== 2 || (kind !== "drift" && kind !== "adherence")) {
+    throw new Error("Expected a RuleKeeper v2 report (run \"rulekeeper drift\" or \"rulekeeper adherence\" first)");
+  }
+  return parsed as Report | DriftReport;
+}
+
+/** Drift payloads are already small; trim findings only if a huge doc pushes past the cap. */
+function buildDriftPayload(report: DriftReport): { payload: string; summary: string } {
+  let current = report;
+  let payload = JSON.stringify(current);
+  for (const limit of [60, 25, 10]) {
+    if (Buffer.byteLength(payload) < MAX_SHARE_BYTES) break;
+    current = { ...current, repos: current.repos.map(repo => ({ ...repo, findings: repo.findings.slice(0, limit) })) };
+    payload = JSON.stringify(current);
+  }
+  if (Buffer.byteLength(payload) >= MAX_SHARE_BYTES) throw new Error(`Unable to trim share payload below ${MAX_SHARE_BYTES} bytes`);
+  assertRedacted(current);
+  const findings = current.repos.reduce((total, repo) => total + repo.findings.length, 0);
+  return { payload, summary: `${current.repos.length} repo(s), ${findings} finding(s), ${Buffer.byteLength(payload)} bytes of redacted JSON.` };
 }
 
 function ruleCount(report: Report): number {
@@ -97,11 +116,19 @@ export function buildSharePayload(report: Report): { report: SharePayload; paylo
 }
 
 export async function shareReport(path: string, options: ShareOptions = {}): Promise<void> {
-  const { report, payload } = buildSharePayload(readReport(path));
+  const source = readReport(path);
+  let payload: string;
+  let summary: string;
+  if (source.kind === "drift") {
+    ({ payload, summary } = buildDriftPayload(source));
+  } else {
+    const built = buildSharePayload(source);
+    payload = built.payload;
+    const trimming = built.report.trimmed ? ` Trimmed for sharing: omitted ${built.report.omittedRepos} repo(s) and ${built.report.omittedRules} rule(s).` : "";
+    summary = `${built.report.repos.length} repo(s), ${ruleCount(built.report)} rule(s), ${Buffer.byteLength(payload)} bytes of redacted JSON.${trimming}`;
+  }
   if (options.dryRun) { stdout.write(`${payload}\n`); return; }
-  const rules = ruleCount(report);
-  const trimming = report.trimmed ? ` Trimmed for sharing: omitted ${report.omittedRepos} repo(s) and ${report.omittedRules} rule(s).` : "";
-  stdout.write(`Will upload exactly: ${report.repos.length} repo(s), ${rules} rule(s), ${Buffer.byteLength(payload)} bytes of redacted JSON.${trimming}\n`);
+  stdout.write(`Will upload exactly: ${summary}\n`);
   if (!options.yes) {
     if (!stdin.isTTY) throw new Error("Confirmation requires an interactive terminal; use --yes to confirm explicitly");
     const io = createInterface({ input: stdin, output: stdout }); const answer = await io.question("Upload this report? [y/N] "); io.close();

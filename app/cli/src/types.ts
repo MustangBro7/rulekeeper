@@ -83,7 +83,8 @@ export interface ScoredRule {
 }
 
 export interface Report {
-  v: 1;
+  v: 2;
+  kind: "adherence";
   generatedAt: string;
   window: { since: string; until: string };
   totals: {
@@ -98,6 +99,8 @@ export interface Report {
 }
 
 export type SharedRepo = Report["repos"][number] & { untestedCount: number };
+
+export type { Claim, ClaimKind, DriftFile, DriftReport, DriftRepo, Finding, FindingCode, Severity } from "./drift/types.js";
 
 export interface SharePayload extends Omit<Report, "repos"> {
   repos: SharedRepo[];

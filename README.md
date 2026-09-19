@@ -13,6 +13,10 @@ rulekeeper drift             # check this repo's instruction files against the c
 rulekeeper adherence         # check whether agents followed them
 ```
 
+The CLI works standalone with no account. Sign in at the
+[dashboard](https://rulekeeper.abhinavmohan12.workers.dev/app) to track a repository's
+truth score over time and wire it into CI.
+
 ---
 
 ## 1 · `rulekeeper drift` — is the map still accurate?
@@ -44,6 +48,9 @@ rulekeeper drift [--dir <repo>] [--strict] [--no-history] [--json <path>] [--md 
 ```yaml
 name: agent-instructions
 on: [push, pull_request]
+permissions:
+  contents: read
+  pull-requests: write
 jobs:
   drift:
     runs-on: ubuntu-latest
@@ -51,10 +58,42 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm i -g https://github.com/MustangBro7/rulekeeper/releases/latest/download/rulekeeper-cli.tgz
-      - run: rulekeeper drift --strict
+        with: { node-version: 22 }
+      - uses: MustangBro7/rulekeeper@v2
+        with:
+          token: ${{ secrets.RULEKEEPER_TOKEN }}   # optional; omit to check without reporting
+          strict: "false"
 ```
+
+The Action installs the CLI, fails the build on errors, writes a job summary, and keeps a
+single pull-request comment up to date with the score and what changed since the last run.
+`token` is optional — without it the check still runs, it just does not report anywhere.
+
+| Input | Default | Meaning |
+|---|---|---|
+| `token` | — | Ingest token from the dashboard. Omit to run without reporting. |
+| `strict` | `false` | Also fail on warnings. |
+| `working-directory` | `.` | Where the instruction files live. |
+| `comment` | `true` | Maintain a PR comment (needs `pull-requests: write`). |
+| `version` | `latest` | CLI release to install. |
+
+Paths that git ignores (build output like `dist/`) are never reported as missing, so a doc
+describing where artefacts go does not fail a clean checkout.
+
+## The dashboard
+
+Sign in with GitHub, add a repository, create an ingest token, and every CI run records:
+
+- **Truth score over time** — a line trending down means a doc is drifting away from the code.
+- **Findings triage** — filter by severity; each finding shows the doc line beside the repo's
+  actual state, with a suggested fix where one is derivable.
+- **Accepted findings** — some drift is intentional. Accept it once and CI stops failing on it
+  for everyone, on every branch. CI fetches that baseline before deciding whether to fail, and
+  falls back to failing on everything real if the dashboard is unreachable.
+- **Run history** — branch, commit and score per run, so you can point at what broke it.
+
+Reports are generated in your runner and contain repository-relative paths, counts and quotes
+from your own docs. Your source never leaves your machine.
 
 ---
 

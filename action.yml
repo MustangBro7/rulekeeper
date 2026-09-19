@@ -96,6 +96,7 @@ runs:
             line("introduced", j.introduced ?? 0);
             line("resolved", j.resolved ?? 0);
             line("accepted", j.accepted ?? 0);
+            line("firstrun", j.firstRun ? "1" : "0");
             line("url", j.url ?? "");
           '
         fi
@@ -134,11 +135,21 @@ runs:
           verdict="⚠️ ${warnings} warning(s)"
         fi
 
-        movement=""
-        [ "${introduced:-0}" != "0" ] && movement="${movement}**${introduced} new** · "
-        [ "${resolved:-0}" != "0" ] && movement="${movement}${resolved} fixed · "
-        [ "${accepted:-0}" != "0" ] && movement="${movement}${accepted} accepted · "
-        movement="${movement}since the last run on this branch"
+        firstrun="${{ steps.drift.outputs.firstrun }}"
+        changes=""
+        [ "${introduced:-0}" != "0" ] && changes="${changes}**${introduced} new** · "
+        [ "${resolved:-0}" != "0" ] && changes="${changes}${resolved} fixed · "
+        [ "${accepted:-0}" != "0" ] && changes="${changes}${accepted} accepted · "
+
+        if [ -z "$url" ]; then
+          movement=""
+        elif [ "$firstrun" = "1" ]; then
+          movement="_First run for this project._"
+        elif [ -n "$changes" ]; then
+          movement="${changes%· }— since the last run on this branch"
+        else
+          movement="_No change since the last run on this branch._"
+        fi
 
         dash=""
         [ -n "$url" ] && dash=$(printf '\n[View on the RuleKeeper dashboard](%s)\n' "$url")

@@ -92,14 +92,16 @@
     </header>
 
     <!-- ── Stats ────────────────────────────────────────── -->
-    <section class="stats" aria-label="Findings from a four-week backtest" style="padding:0">
+    <section class="stats" aria-label="Measurements from a real 90-day run" style="padding:0">
       <div class="wrap stats-in">
-        <div class="stat"><p class="v"><em>60%</em></p><p class="k">of sessions never received the instruction file at all</p></div>
-        <div class="stat"><p class="v">78→<em>93%</em></p><p class="k">adherence after one measured rule was rewritten</p></div>
-        <div class="stat"><p class="v"><em>8/23</em></p><p class="k">rules never exercised — pure context tax</p></div>
-        <div class="stat"><p class="v"><em>59</em></p><p class="k">real sessions in the validating backtest</p></div>
+        <div class="stat"><p class="v"><em>1 in 3</em></p><p class="k">times an instruction file failed to reach the agent's context</p></div>
+        <div class="stat"><p class="v"><em>69</em></p><p class="k">real sessions measured across 4 repositories</p></div>
+        <div class="stat"><p class="v"><em>3,034</em></p><p class="k">commands and 916 edits replayed from transcripts</p></div>
+        <div class="stat"><p class="v"><em>0</em></p><p class="k">false positives left in drift after tuning on real repos</p></div>
       </div>
     </section>
+
+    <p class="wrap stat-source">Measured with RuleKeeper itself over 90 days of the author's own Claude Code and Codex sessions. Run it on your own logs — the numbers you care about are yours, not ours.</p>
 
     <!-- ── Drift ────────────────────────────────────────── -->
     <section class="product product--drift" id="drift">

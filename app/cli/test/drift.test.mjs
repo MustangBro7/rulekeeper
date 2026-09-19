@@ -151,3 +151,14 @@ test("a repository that matches its instructions reports no drift", () => {
   assert.deepEqual(repo.findings, []);
   assert.equal(repo.score, 100);
 });
+
+test("vendor-owned repositories are not attributed to the user", async () => {
+  const { isVendorRoot } = await import("../dist/discover.js");
+  const home = "/Users/example";
+  assert.equal(isVendorRoot("/opt/homebrew", home), true);
+  assert.equal(isVendorRoot("/opt/homebrew/docs", home), true);
+  assert.equal(isVendorRoot("/Users/example/code/app/node_modules/pkg", home), true);
+  assert.equal(isVendorRoot("/Users/example/.cargo/registry/src/thing", home), true);
+  assert.equal(isVendorRoot("/Users/example/code/my-app", home), false);
+  assert.equal(isVendorRoot("/Volumes/X10 Pro/projects/rulekeeper", home), false);
+});

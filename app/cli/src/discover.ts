@@ -42,6 +42,27 @@ export function discoverSessions(since: string, until: string, home = homedir())
   return { sessions, found: { claude, codex } };
 }
 
+/**
+ * Package managers and toolchains ship their own CLAUDE.md / AGENTS.md. Touching one during a
+ * session does not make it your repository, and reporting it only produces noise.
+ */
+const VENDOR_ROOTS = [
+  "/opt/homebrew", "/usr/local/Homebrew", "/home/linuxbrew",
+  "/usr/lib", "/usr/share", "/Library", "/System", "/Applications", "/nix", "/snap",
+];
+const VENDOR_SEGMENTS = [
+  "node_modules", "site-packages", "vendor/bundle", ".cargo/registry", ".rustup",
+  ".nvm", ".pyenv", ".rbenv", ".bun/install", ".deno", ".gradle", ".m2",
+];
+
+export function isVendorRoot(root: string, home = homedir()): boolean {
+  if (VENDOR_ROOTS.some(prefix => root === prefix || root.startsWith(`${prefix}/`))) return true;
+  if (VENDOR_SEGMENTS.some(segment => root.includes(`/${segment}/`) || root.endsWith(`/${segment}`))) return true;
+  return ["go/pkg", ".local/share/pnpm", ".npm", ".cache"].some(
+    segment => root === join(home, segment) || root.startsWith(`${join(home, segment)}/`),
+  );
+}
+
 export function findGitRoot(candidate: string): string | undefined {
   let start = candidate;
   try { if (existsSync(start) && !statSync(start).isDirectory()) start = dirname(start); } catch { return undefined; }
@@ -91,5 +112,9 @@ export function attributeRepos(sessions: Session[], onlyDir?: string): RepoConte
     for (const root of touched) { const current = roots.get(root) ?? []; current.push(session); roots.set(root, current); }
   }
   if (fixed && !roots.has(fixed) && existsSync(fixed)) roots.set(fixed, []);
-  return [...roots].map(([root, touched]) => ({ root, name: basename(root), sessions: touched, files: discoverInstructionFiles(root) })).filter(repo => repo.files.length > 0).sort((a, b) => a.name.localeCompare(b.name));
+  return [...roots]
+    .filter(([root]) => fixed !== undefined || !isVendorRoot(root))
+    .map(([root, touched]) => ({ root, name: basename(root), sessions: touched, files: discoverInstructionFiles(root) }))
+    .filter(repo => repo.files.length > 0)
+    .sort((a, b) => a.name.localeCompare(b.name));
 }

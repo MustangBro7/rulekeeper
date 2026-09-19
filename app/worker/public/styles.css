@@ -695,3 +695,12 @@ footer {
 @media (max-width: 460px) {
   .stats-in { grid-template-columns: 1fr; }
 }
+
+.stat-source {
+  margin: 20px auto 0;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: center;
+  max-width: 70ch;
+}

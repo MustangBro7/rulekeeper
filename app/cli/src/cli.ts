@@ -114,7 +114,16 @@ async function runDriftCommand(args: string[]): Promise<void> {
     if (!token) throw new Error("--report needs an ingest token: pass --token or set RULEKEEPER_TOKEN");
     accepted = await fetchBaseline(token, api);
     const result = await uploadReport(report, { token, api });
-    console.log(`\nReported to ${result.url} (score ${result.score}/100${result.accepted > 0 ? `, ${result.accepted} accepted` : ""})`);
+    const movement = result.firstRun
+      ? "first run for this project"
+      : [
+          result.introduced > 0 ? `${result.introduced} new` : "",
+          result.resolved > 0 ? `${result.resolved} fixed` : "",
+          result.introduced === 0 && result.resolved === 0 ? "no change since the last run" : "",
+        ].filter(Boolean).join(", ");
+    console.log(`\nReported to ${result.url}`);
+    console.log(`score ${result.score}/100 · ${movement}${result.accepted > 0 ? ` · ${result.accepted} accepted` : ""}`);
+    writeFileSync(outputPath(args, "--run-json", "run.json"), `${JSON.stringify(result, null, 2)}\n`, "utf8");
   }
 
   const findings = report.repos.flatMap(repo => repo.findings).filter(finding => !accepted.has(fingerprint(finding)));

@@ -88,6 +88,18 @@ runs:
           ' "$report"
         fi
 
+        if [ -f rulekeeper-report/run.json ]; then
+          node -e '
+            const j = JSON.parse(require("fs").readFileSync("rulekeeper-report/run.json", "utf8"));
+            const out = process.env.GITHUB_OUTPUT;
+            const line = (k, v) => require("fs").appendFileSync(out, `${k}=${v}\n`);
+            line("introduced", j.introduced ?? 0);
+            line("resolved", j.resolved ?? 0);
+            line("accepted", j.accepted ?? 0);
+            line("url", j.url ?? "");
+          '
+        fi
+
         {
           echo "## ▚ RuleKeeper"
           echo
@@ -110,6 +122,11 @@ runs:
         warnings="${{ steps.drift.outputs.warnings }}"
         [ -z "$score" ] && exit 0
 
+        introduced="${{ steps.drift.outputs.introduced }}"
+        resolved="${{ steps.drift.outputs.resolved }}"
+        accepted="${{ steps.drift.outputs.accepted }}"
+        url="${{ steps.drift.outputs.url }}"
+
         verdict="✅ every checkable claim still matches the repository"
         if [ "${errors:-0}" != "0" ]; then
           verdict="❌ ${errors} error(s) — the instructions describe code that does not exist"
@@ -117,8 +134,17 @@ runs:
           verdict="⚠️ ${warnings} warning(s)"
         fi
 
-        body=$(printf '## ▚ RuleKeeper — truth score %s/100\n\n%s\n\n<details><summary>Full report</summary>\n\n```\n%s\n```\n\n</details>\n' \
-          "$score" "$verdict" "$(cat /tmp/rulekeeper-output.txt)")
+        movement=""
+        [ "${introduced:-0}" != "0" ] && movement="${movement}**${introduced} new** · "
+        [ "${resolved:-0}" != "0" ] && movement="${movement}${resolved} fixed · "
+        [ "${accepted:-0}" != "0" ] && movement="${movement}${accepted} accepted · "
+        movement="${movement}since the last run on this branch"
+
+        dash=""
+        [ -n "$url" ] && dash=$(printf '\n[View on the RuleKeeper dashboard](%s)\n' "$url")
+
+        body=$(printf '## ▚ RuleKeeper — truth score %s/100\n\n%s\n\n%s\n%s\n<details><summary>Full report</summary>\n\n```\n%s\n```\n\n</details>\n' \
+          "$score" "$verdict" "$movement" "$dash" "$(cat /tmp/rulekeeper-output.txt)")
 
         # Replace our previous comment rather than stacking one per push.
         existing=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments" \

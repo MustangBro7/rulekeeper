@@ -256,6 +256,30 @@ export async function latestRunBody(
   }
 }
 
+/** Fingerprints present in the most recent run before `beforeRunId`, for a new-vs-existing diff. */
+export async function previousFingerprints(
+  db: D1Database,
+  projectId: string,
+  beforeRunId: string,
+  branch: string | null,
+): Promise<Set<string> | null> {
+  const row = branch
+    ? await db.prepare("SELECT body FROM runs WHERE project_id = ? AND branch = ? AND id != ? ORDER BY created_at DESC LIMIT 1")
+        .bind(projectId, branch, beforeRunId).first<{ body: string }>()
+    : await db.prepare("SELECT body FROM runs WHERE project_id = ? AND id != ? ORDER BY created_at DESC LIMIT 1")
+        .bind(projectId, beforeRunId).first<{ body: string }>();
+  if (!row) return null;
+  try {
+    const report = JSON.parse(row.body) as DriftReport;
+    const ids = await Promise.all(
+      report.repos.flatMap((repo) => repo.findings).map((f) => fingerprint(f.code, f.file, f.subject)),
+    );
+    return new Set(ids);
+  } catch {
+    return null;
+  }
+}
+
 export async function listMutes(db: D1Database, projectId: string): Promise<Mute[]> {
   const { results } = await db
     .prepare("SELECT id, fingerprint, code, file, subject, reason, created_at FROM mutes WHERE project_id = ? ORDER BY created_at DESC")

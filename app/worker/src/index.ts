@@ -32,6 +32,7 @@ import {
   listTokens,
   latestRunBody,
   MAX_PROJECTS_PER_USER,
+  previousFingerprints,
   normalizeSlug,
   recordRun,
   removeMute,
@@ -414,21 +415,31 @@ app.post("/api/v1/reports", async (c) => {
   await touchToken(c.env.DB, auth.tokenId);
 
   // Tell CI which findings the owner has already accepted, so it can pass on them.
-  const mutes = await listMutes(c.env.DB, auth.projectId);
+  const [mutes, previous] = await Promise.all([
+    listMutes(c.env.DB, auth.projectId),
+    previousFingerprints(c.env.DB, auth.projectId, run.id, run.branch),
+  ]);
   const muted = new Set(mutes.map((mute) => mute.fingerprint));
   const findings = report.repos.flatMap((repo) => repo.findings);
   let openErrors = 0;
   let openWarnings = 0;
-  const accepted: string[] = [];
+  let accepted = 0;
+  let introduced = 0;
+  const current = new Set<string>();
   for (const finding of findings) {
     const id = await fingerprint(finding.code, finding.file, finding.subject);
+    current.add(id);
+    // Counted against the previous run regardless of acceptance, so that resolved
+    // and introduced stay symmetric and a finding coming back is always visible.
+    if (previous && !previous.has(id)) introduced += 1;
     if (muted.has(id)) {
-      accepted.push(id);
+      accepted += 1;
       continue;
     }
     if (finding.severity === "error") openErrors += 1;
     if (finding.severity === "warn") openWarnings += 1;
   }
+  const resolved = previous ? [...previous].filter((id) => !current.has(id)).length : 0;
 
   return c.json({
     ok: true,
@@ -436,7 +447,10 @@ app.post("/api/v1/reports", async (c) => {
     score: run.score,
     url: `${origin(c.req.raw)}/app/p/${auth.projectId}`,
     open: { errors: openErrors, warnings: openWarnings },
-    accepted: accepted.length,
+    accepted,
+    introduced,
+    resolved,
+    firstRun: previous === null,
   });
 });
 

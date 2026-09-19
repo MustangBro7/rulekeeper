@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { tmpdir } from "node:os";
 import { detectCi, fingerprint } from "../dist/drift/upload.js";
 
 test("fingerprint matches the server's identity scheme", () => {
@@ -37,6 +38,18 @@ test("detectCi strips refs/heads and ignores non-numeric PR ids", () => {
   assert.equal(detectCi({ CHANGE_ID: "not-a-number" }).prNumber, undefined);
 });
 
-test("detectCi returns nothing outside CI", () => {
-  assert.deepEqual(detectCi({}), { branch: undefined, commitSha: undefined, prNumber: undefined });
+test("detectCi returns nothing outside CI and outside a checkout", () => {
+  assert.deepEqual(detectCi({}, tmpdir()), { branch: undefined, commitSha: undefined, prNumber: undefined });
+});
+
+test("detectCi falls back to the local checkout when CI vars are absent", () => {
+  const ci = detectCi({}, process.cwd());
+  assert.ok(ci.branch, "expected a branch from git");
+  assert.match(ci.commitSha, /^[0-9a-f]{40}$/);
+});
+
+test("CI values win over the local checkout", () => {
+  const ci = detectCi({ GITHUB_REF_NAME: "ci-branch", GITHUB_SHA: "0".repeat(40) }, process.cwd());
+  assert.equal(ci.branch, "ci-branch");
+  assert.equal(ci.commitSha, "0".repeat(40));
 });

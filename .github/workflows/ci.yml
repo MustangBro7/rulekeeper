@@ -2,8 +2,12 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [master, main]
   pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   verify:
@@ -31,7 +35,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm --prefix app ci
-      - run: npm --prefix app run build
       - name: Check our own instruction files against the code
-        run: node app/cli/dist/cli.js drift --strict
+        uses: ./
+        with:
+          strict: "true"
+          comment: "true"
